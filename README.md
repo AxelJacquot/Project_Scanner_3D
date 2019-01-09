@@ -9,11 +9,11 @@ Axel Jacquot
 
 ## Linux Software
 
-Axel Jacquot, Clément Caillau
+Axel Jacquot, Clément Cailliau
 
 ## Man-Machine Interface (fr : IHM)
 
-Clément Caillau
+Clément Cailliau
 
 ## Platform
 
