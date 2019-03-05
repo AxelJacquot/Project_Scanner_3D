@@ -5,7 +5,6 @@ import pyglet.gl as gl
 import numpy as np
 import pyrealsense2 as rs
 
-
 # https://stackoverflow.com/a/6802723
 def rotation_matrix(axis, theta):
     """
@@ -22,7 +21,6 @@ def rotation_matrix(axis, theta):
                      [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
                      [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
 
-
 class AppState:
 
     def __init__(self, *args, **kwargs):
@@ -33,7 +31,7 @@ class AppState:
         self.paused = False
         self.decimate = 0
         self.color = True
-        self.postprocessing = False
+        self.postprocessing = True
 
     def reset(self):
         self.pitch, self.yaw, self.distance = 0, 0, 2
@@ -44,7 +42,6 @@ class AppState:
         Rx = rotation_matrix((1, 0, 0), math.radians(-self.pitch))
         Ry = rotation_matrix((0, 1, 0), math.radians(-self.yaw))
         return np.dot(Ry, Rx).astype(np.float32)
-
 
 state = AppState()
 
@@ -77,7 +74,6 @@ filters = [rs.disparity_transform(),
            rs.temporal_filter(),
            rs.disparity_transform(False)]
 
-
 # pyglet
 window = pyglet.window.Window(
     config=gl.Config(
@@ -87,7 +83,6 @@ window = pyglet.window.Window(
     resizable=True, vsync=True)
 keys = pyglet.window.key.KeyStateHandler()
 window.push_handlers(keys)
-
 
 def convert_fmt(fmt):
     """rs.format to pyglet format string"""
@@ -99,7 +94,6 @@ def convert_fmt(fmt):
         rs.format.y8: 'L',
     }[fmt]
 
-
 # Create a VertexList to hold pointcloud data
 # Will pre-allocates memory according to the attributes below
 vertex_list = pyglet.graphics.vertex_list(
@@ -109,8 +103,7 @@ other_profile = rs.video_stream_profile(profile.get_stream(other_stream))
 image_data = pyglet.image.ImageData(w, h, convert_fmt(
     other_profile.format()), (gl.GLubyte * (w * h * 3))())
 
-fps_display = pyglet.clock.ClockDisplay()
-
+#fps_display = pyglet.clock.ClockDisplay()
 
 @window.event
 def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
@@ -129,22 +122,18 @@ def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
         state.translation -= (0, 0, dz)
         state.distance -= dz
 
-
 def handle_mouse_btns(x, y, button, modifiers):
     state.mouse_btns[0] ^= (button & pyglet.window.mouse.LEFT)
     state.mouse_btns[1] ^= (button & pyglet.window.mouse.RIGHT)
     state.mouse_btns[2] ^= (button & pyglet.window.mouse.MIDDLE)
 
-
 window.on_mouse_press = window.on_mouse_release = handle_mouse_btns
-
 
 @window.event
 def on_mouse_scroll(x, y, scroll_x, scroll_y):
     dz = scroll_y * 0.1
     state.translation -= (0, 0, dz)
     state.distance -= dz
-
 
 def on_key_press(symbol, modifiers):
     if symbol == pyglet.window.key.R:
@@ -166,15 +155,15 @@ def on_key_press(symbol, modifiers):
     if symbol == pyglet.window.key.S:
         pyglet.image.get_buffer_manager().get_color_buffer().save('out.png')
 
+    """ if symbol == pyglet.window.key.A:
+        pyglet.image.get_buffer_manager().get_depth_buffer().save('out.png') """
+
     if symbol == pyglet.window.key.Q:
         window.close()
 
-
 window.push_handlers(on_key_press)
 
-
-def axes(size=1, width=1):
-    """draw 3d axes"""
+""" def axes(size=1, width=1):
     gl.glLineWidth(width)
     pyglet.graphics.draw(6, gl.GL_LINES,
                          ('v3f', (0, 0, 0, size, 0, 0,
@@ -184,11 +173,10 @@ def axes(size=1, width=1):
                                   0, 1, 0, 0, 1, 0,
                                   0, 0, 1, 0, 0, 1,
                                   ))
-                         )
+                         ) """
 
-
-def frustum(intrinsics):
-    """draw camera's frustum"""
+""" def frustum(intrinsics):
+    #draw camera  frustum
     w, h = intrinsics.width, intrinsics.height
     batch = pyglet.graphics.Batch()
 
@@ -208,11 +196,10 @@ def frustum(intrinsics):
         batch.add(2, gl.GL_LINES, None, ('v3f', bottom_right + bottom_left))
         batch.add(2, gl.GL_LINES, None, ('v3f', bottom_left + top_left))
 
-    batch.draw()
+    batch.draw() """
 
-
-def grid(size=1, n=10, width=1):
-    """draw a grid on xz plane"""
+""" def grid(size=1, n=10, width=1):
+    #draw a grid on xz plane
     gl.glLineWidth(width)
     s = size / float(n)
     s2 = 0.5 * size
@@ -225,8 +212,7 @@ def grid(size=1, n=10, width=1):
         z = -s2 + i * s
         batch.add(2, gl.GL_LINES, None, ('v3f', (-s2, 0, z, s2, 0, z)))
 
-    batch.draw()
-
+    batch.draw() """
 
 @window.event
 def on_draw():
@@ -260,8 +246,8 @@ def on_draw():
     gl.glRotated(state.pitch, 1, 0, 0)
     gl.glRotated(state.yaw, 0, 1, 0)
 
-    if any(state.mouse_btns):
-        axes(0.1, 4)
+    """ if any(state.mouse_btns):
+        axes(0.1, 4) """
 
     gl.glTranslatef(0, 0, -state.distance)
     gl.glTranslatef(*state.translation)
@@ -269,12 +255,12 @@ def on_draw():
     gl.glColor3f(0.5, 0.5, 0.5)
     gl.glPushMatrix()
     gl.glTranslatef(0, 0.5, 0.5)
-    grid()
+    #grid()
     gl.glPopMatrix()
 
-    psz = max(window.get_size()) / float(max(w, h)) if state.scale else 1
+    psz = 1
     gl.glPointSize(psz)
-    distance = (0, 0, 1) if state.attenuation else (1, 0, 0)
+    distance = (1, 0, 0)
     gl.glPointParameterfv(gl.GL_POINT_DISTANCE_ATTENUATION,
                           (gl.GLfloat * 3)(*distance))
 
@@ -296,8 +282,8 @@ def on_draw():
     gl.glDisable(gl.GL_LIGHTING)
 
     gl.glColor3f(0.25, 0.25, 0.25)
-    frustum(depth_intrinsics)
-    axes()
+    #frustum(depth_intrinsics)
+    #axes()
 
     gl.glMatrixMode(gl.GL_PROJECTION)
     gl.glLoadIdentity()
@@ -308,8 +294,7 @@ def on_draw():
     gl.glLoadIdentity()
     gl.glDisable(gl.GL_DEPTH_TEST)
 
-    fps_display.draw()
-
+    #fps_display.draw()
 
 def run(dt):
     points = rs.points()
@@ -356,7 +341,8 @@ def run(dt):
 
     if keys[pyglet.window.key.E]:
         #points.export_to_ply("out.ply", color_source)
-        points.export_to_ply("out.ply", mapped_frame)
+        points.export_to_ply("out.ply", color)
+        print("Export Reussi")
 
     pc.map_to(mapped_frame)
 
