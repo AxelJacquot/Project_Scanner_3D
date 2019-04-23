@@ -5,22 +5,7 @@ import pyglet.gl as gl
 import numpy as np
 import pyrealsense2 as rs
 import pcl
-
-# https://stackoverflow.com/a/6802723
-def rotation_matrix(axis, theta):
-    """
-    Return the rotation matrix associated with counterclockwise rotation about
-    the given axis by theta radians.
-    """
-    axis = np.asarray(axis)
-    axis = axis / math.sqrt(np.dot(axis, axis))
-    a = math.cos(theta / 2.0)
-    b, c, d = -axis * math.sin(theta / 2.0)
-    aa, bb, cc, dd = a * a, b * b, c * c, d * d
-    bc, ad, ac, ab, bd, cd = b * c, a * d, a * c, a * b, b * d, c * d
-    return np.array([[aa + bb - cc - dd, 2 * (bc + ad), 2 * (bd - ac)],
-                     [2 * (bc - ad), aa + cc - bb - dd, 2 * (cd + ab)],
-                     [2 * (bd + ac), 2 * (cd - ab), aa + dd - bb - cc]])
+from open3d import *
 
 class AppState:
     def __init__(self, *args, **kwargs):
@@ -37,21 +22,36 @@ class AppState:
         self.pitch, self.yaw, self.distance = 0, 0, 2
         self.translation[:] = 0, 0, 1
 
-    @property
-    def rotation(self):
-        Rx = rotation_matrix((1, 0, 0), math.radians(-self.pitch))
-        Ry = rotation_matrix((0, 1, 0), math.radians(-self.yaw))
-        return np.dot(Ry, Rx).astype(np.float32)
-
 state = AppState()
+
+#Multiway_Registration Init
+voxel_size = 0.02
+max_correspondence_distance_coarse = voxel_size * 15
+max_correspondence_distance_fine = voxel_size * 1.5
 
 # Configure streams
 pipeline = rs.pipeline()
 config = rs.config()
-config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-#other_stream, other_format = rs.stream.infrared, rs.format.y8
-other_stream, other_format = rs.stream.color, rs.format.rgb8
-config.enable_stream(other_stream, 1280, 720, other_format, 30)
+print("Veuillez choisir une resolution parmi les suivantes")
+print("1: 240p")
+print("2: 480p")
+print("3: 720p")
+resol = input()
+if resol == 1:
+    config.enable_stream(rs.stream.depth, 320, 240, rs.format.z16, 30)
+    #other_stream, other_format = rs.stream.infrared, rs.format.y8
+    other_stream, other_format = rs.stream.color, rs.format.rgb8
+    config.enable_stream(other_stream, 320, 240, other_format, 30)
+elif resol == 2:
+    config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+    #other_stream, other_format = rs.stream.infrared, rs.format.y8
+    other_stream, other_format = rs.stream.color, rs.format.rgb8
+    config.enable_stream(other_stream, 640, 480, other_format, 30)
+elif resol == 3:
+    config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
+    #other_stream, other_format = rs.stream.infrared, rs.format.y8
+    other_stream, other_format = rs.stream.color, rs.format.rgb8
+    config.enable_stream(other_stream, 1280, 720, other_format, 30)
 
 # Start streaming
 pipeline.start(config)
@@ -328,7 +328,130 @@ def copy(dst, src):
 
 pyglet.clock.schedule(run)
 
-try:
-    pyglet.app.run()
-finally:
-    pipeline.stop()
+def load_point_clouds(name, voxel_size = 0.0):
+    pcds = []
+    for i in range(10):
+        nom = name + ("%d" % i) + (".pcd")
+        pcd = read_point_cloud(name)
+        pcd_down = voxel_down_sample(pcd, voxel_size = voxel_size)
+        pcds.append(pcd_down)
+    return pcds
+
+
+def pairwise_registration(source, target):
+    print("Apply point-to-plane ICP")
+    icp_coarse = registration_icp(source, target,
+            max_correspondence_distance_coarse, np.identity(4),
+            TransformationEstimationPointToPlane())
+    icp_fine = registration_icp(source, target,
+            max_correspondence_distance_fine, icp_coarse.transformation,
+            TransformationEstimationPointToPlane())
+    transformation_icp = icp_fine.transformation
+    information_icp = get_information_matrix_from_point_clouds(
+            source, target, max_correspondence_distance_fine,
+            icp_fine.transformation)
+    return transformation_icp, information_icp
+
+
+def full_registration(pcds,
+        max_correspondence_distance_coarse, max_correspondence_distance_fine):
+    pose_graph = PoseGraph()
+    odometry = np.identity(4)
+    pose_graph.nodes.append(PoseGraphNode(odometry))
+    n_pcds = len(pcds)
+    for source_id in range(n_pcds):
+        for target_id in range(source_id + 1, n_pcds):
+            transformation_icp, information_icp = pairwise_registration(
+                    pcds[source_id], pcds[target_id])
+            print("Build PoseGraph")
+            if target_id == source_id + 1: # odometry case
+                odometry = np.dot(transformation_icp, odometry)
+                pose_graph.nodes.append(PoseGraphNode(np.linalg.inv(odometry)))
+                pose_graph.edges.append(PoseGraphEdge(source_id, target_id,
+                        transformation_icp, information_icp, uncertain = False))
+            else: # loop closure case
+                pose_graph.edges.append(PoseGraphEdge(source_id, target_id,
+                        transformation_icp, information_icp, uncertain = True))
+    return pose_graph
+
+def capture(name):
+    points = rs.points()
+
+    success, frames = pipeline.try_wait_for_frames(timeout_ms=10)
+
+    depth_frame = frames.get_depth_frame()
+    other_frame = frames.first(other_stream)
+    color = frames.get_color_frame()
+
+    depth_frame = decimate.process(depth_frame)
+
+    if state.postprocessing:
+        for f in filters:
+            depth_frame = f.process(depth_frame)
+
+    points = pc.calculate(depth_frame)
+
+    pc.map_to(other_frame)
+
+    #points.export_to_ply("out.ply", color_source)
+    ply = name + ".ply"
+    pcd = name + ".pcd"
+    points.export_to_ply(ply, color)
+    clouding = pcl.load(ply)
+    pcl.save(clouding, pcd)
+    print("Export Reussi")
+    # handle color source or size change
+    #fmt = convert_fmt(mapped_frame.profile.format())
+
+if __name__ == "__main__":
+    while 1:
+        print("Menu des choix:")
+        print("1- Visualisation")
+        print("2- Capture")
+        print("3- Fabrication du modele complet")
+        tes = input("Faites votre choix: ")
+        if tes == 1:
+            pyglet.app.run()
+        if tes ==2:
+            i=0
+            nom = input("Nom du fichier de sortie: ")
+            while i < 10:
+                print("")
+                nom2 = nom+("%d" % i)
+                capture(nom2)
+                i = i+1
+        if tes == 3:
+            nom = input("Nom du fichier de sortie: ")
+            set_verbosity_level(VerbosityLevel.Debug)
+            pcds_down = load_point_clouds(nom, voxel_size)
+            draw_geometries(pcds_down)
+
+            print("Full registration ...")
+            pose_graph = full_registration(pcds_down,
+                    max_correspondence_distance_coarse,
+                    max_correspondence_distance_fine)
+
+            print("Optimizing PoseGraph ...")
+            option = GlobalOptimizationOption(
+                    max_correspondence_distance = max_correspondence_distance_fine,
+                    edge_prune_threshold = 0.25,
+                    reference_node = 0)
+            global_optimization(pose_graph,
+                    GlobalOptimizationLevenbergMarquardt(),
+                    GlobalOptimizationConvergenceCriteria(), option)
+
+            print("Transform points and display")
+            for point_id in range(len(pcds_down)):
+                print(pose_graph.nodes[point_id].pose)
+                pcds_down[point_id].transform(pose_graph.nodes[point_id].pose)
+            draw_geometries(pcds_down)
+
+            print("Make a combined point cloud")
+            pcds = load_point_clouds(voxel_size)
+            pcd_combined = PointCloud()
+            for point_id in range(len(pcds)):
+                pcds[point_id].transform(pose_graph.nodes[point_id].pose)
+                pcd_combined += pcds[point_id]
+            pcd_combined_down = voxel_down_sample(pcd_combined, voxel_size = voxel_size)
+            write_point_cloud("multiway_registration.pcd", pcd_combined_down)
+            draw_geometries([pcd_combined_down])
