@@ -331,8 +331,8 @@ pyglet.clock.schedule(run)
 def load_point_clouds(name, voxel_size = 0.0):
     pcds = []
     for i in range(10):
-        nom = name + ("%d" % i) + (".pcd")
-        pcd = read_point_cloud(name)
+        nom3 = name + ("%d" % i) + (".pcd")
+        pcd = read_point_cloud(nom3)
         pcd_down = voxel_down_sample(pcd, voxel_size = voxel_size)
         pcds.append(pcd_down)
     return pcds
