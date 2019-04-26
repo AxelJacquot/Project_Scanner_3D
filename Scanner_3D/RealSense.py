@@ -36,7 +36,7 @@ print("Veuillez choisir une resolution parmi les suivantes")
 print("1: 240p")
 print("2: 480p")
 print("3: 720p")
-resol = input()
+resol = input("Faites un choix: ")
 if resol == 1:
     config.enable_stream(rs.stream.depth, 320, 240, rs.format.z16, 30)
     #other_stream, other_format = rs.stream.infrared, rs.format.y8
@@ -288,15 +288,6 @@ def run(dt):
 
     pc.map_to(mapped_frame)
 
-    if keys[pyglet.window.key.E]:
-        #points.export_to_ply("out.ply", color_source)
-        points.export_to_ply("out.ply", color)
-        clouding = pcl.load("out.ply")
-        pcl.save(clouding, "out.pcd")
-        print("Export Reussi")
-
-    pc.map_to(mapped_frame)
-
     # handle color source or size change
     fmt = convert_fmt(mapped_frame.profile.format())
     global image_data
@@ -409,10 +400,12 @@ if __name__ == "__main__":
         print("1- Visualisation")
         print("2- Capture")
         print("3- Fabrication du modele complet")
-        tes = input("Faites votre choix: ")
-        if tes == 1:
+        print("4- Conversion du fichier 3D")
+        print("5- Visualisation du modele final")
+        choice = input("Faites votre choix: ")
+        if choice == 1:
             pyglet.app.run()
-        if tes ==2:
+        if choice ==2:
             i=0
             nom = input("Nom du fichier de sortie: ")
             while i < 10:
@@ -420,7 +413,7 @@ if __name__ == "__main__":
                 nom2 = nom+("%d" % i)
                 capture(nom2)
                 i = i+1
-        if tes == 3:
+        if choice == 3:
             nom = input("Nom du fichier de sortie: ")
             set_verbosity_level(VerbosityLevel.Debug)
             pcds_down = load_point_clouds(nom, voxel_size)
@@ -455,3 +448,13 @@ if __name__ == "__main__":
             pcd_combined_down = voxel_down_sample(pcd_combined, voxel_size = voxel_size)
             write_point_cloud("multiway_registration.pcd", pcd_combined_down)
             draw_geometries([pcd_combined_down])
+        if choice == 4:
+            print("Vous pouvez convertir votre fichier en:")
+            print("OBJ")
+            print("STL")
+            print("PLY")
+            print("PCD")
+            print("VTK")
+            format_convert = input("Format choisie: ")
+        if choice == 5:
+            print("Visualisation modele finale")

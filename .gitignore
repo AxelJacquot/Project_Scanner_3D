@@ -86,3 +86,25 @@
 Scanner_3D/\.vscode/launch\.json
 
 Scanner_3D/\.vscode/settings\.json
+
+\.vscode/ipch/121b9a67f31495f5/main\.ipch
+
+\.vscode/ipch/121b9a67f31495f5/mmap_address\.bin
+
+\.vscode/ipch/1eb6e3442abeba0c/mmap_address\.bin
+
+\.vscode/ipch/1eb6ee442abeccbd/configuration\.ipch
+
+\.vscode/ipch/1eb6ee442abeccbd/mmap_address\.bin
+
+\.vscode/ipch/9a34990c0005c8ab/mmap_address\.bin
+
+\.vscode/ipch/9a34990c0005c8ab/stm32f4xx_hal_tim\.ipch
+
+\.vscode/ipch/b2eec25ac1a42556/main\.ipch
+
+\.vscode/ipch/b2eec25ac1a42556/mmap_address\.bin
+
+\.vscode/ipch/f463b7173b86375e/main\.ipch
+
+\.vscode/ipch/f463b7173b86375e/mmap_address\.bin
