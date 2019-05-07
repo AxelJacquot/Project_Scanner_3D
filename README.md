@@ -9,16 +9,12 @@ Axel Jacquot
 
 ## Linux Software
 
-Axel Jacquot, Clément Cailliau
-
-## Man-Machine Interface (fr : IHM)
-
-Clément Cailliau
+Axel Jacquot
 
 ## Platform
 
-Erwin LEJEUNE
+Axel JACQUOT
 
 ## STM32 for Motor Control
 
-Erwin LEJEUNE
+Axel JACQUOT
