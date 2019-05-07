@@ -99,6 +99,23 @@ void GPIO_Configuration(GPIO_TypeDef * GPIO, uint16_t mode, uint16_t Pin){
 	HAL_GPIO_Init(GPIO, &GPIO_Config);
 }
 
+void GPIO_Configuration_Alternate(GPIO_TypeDef * GPIO, uint16_t mode, uint16_t Pin, uint16_t alternate){
+	/* Activation de l'horloge du port */
+	ENABLE_CLK_GPIO_PORT(GPIO);
+
+	GPIO_InitTypeDef GPIO_Config;
+
+	/* Configuration du mode */
+	GPIO_Config.Mode = mode;
+	GPIO_Config.Alternate = alternate;
+
+	/* Configuration des pins */
+	GPIO_Config.Pin = Pin;
+
+	/*Initialisation de la configuration */
+	HAL_GPIO_Init(GPIO, &GPIO_Config);
+}
+
 /* Permet d'activer l'horloge du port */
 void ENABLE_CLK_GPIO_PORT(GPIO_TypeDef *GPIO){
 	if(GPIO == GPIOA)

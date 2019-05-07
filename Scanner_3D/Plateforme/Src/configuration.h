@@ -21,5 +21,6 @@ void Timer_Config(TIM_HandleTypeDef * Timer, TIM_TypeDef * timePort, uint16_t pr
 void Timer_Mode_IC_Config(TIM_HandleTypeDef * Timer, uint16_t polarity, uint16_t filter, uint16_t selection, uint16_t prescaler);
 void ENABLE_CLK_GPIO_PORT(GPIO_TypeDef * GPIO);
 void GPIO_Configuration(GPIO_TypeDef * GPIO, uint16_t mode, uint16_t Pin);
+void GPIO_Configuration_Alternate(GPIO_TypeDef * GPIO, uint16_t mode, uint16_t Pin, uint16_t alternate);
 
 #endif

@@ -53,7 +53,9 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define ENABLE_PIN	GPIO_PIN_0
+#define SENS_PIN	GPIO_PIN_3
+#define PWM_PIN		GPIO_PIN_8
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -62,14 +64,17 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim1;
 
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+UART_HandleTypeDef UART_Handle;
+TIM_HandleTypeDef TIM_Handle;
 TIM_OC_InitTypeDef PWM_Handle;
 unsigned char data = 0;
 unsigned char  data_receive=0;
+unsigned char counter = 0;
 
 /* USER CODE END PV */
 
@@ -77,8 +82,15 @@ unsigned char  data_receive=0;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
+	if (htim == &htim1){
+		counter++;
+	}
+
+}
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -102,10 +114,12 @@ int main(void)
 	HAL_Init();
 
 	/* USER CODE BEGIN Init */
+	GPIO_Configuration(GPIOB, GPIO_MODE_OUTPUT_PP, ENABLE_PIN | SENS_PIN);
+	GPIO_Configuration_Alternate(GPIOC, GPIO_MODE_AF_PP, GPIO_PIN_8,GPIO_AF2_TIM3);
 	GPIO_Configuration(LED_PORT, GPIO_MODE_OUTPUT_PP, LED_ALL);
-	Timer_Config(&htim2, TIM2, 0, 4000);
+	Timer_Config(&TIM_Handle, TIM3, 1, 4000);
 
-	Timer_Mode_PWM_Config(&htim2, &PWM_Handle, TIM_OCMODE_PWM1, TIM_OCPOLARITY_HIGH);
+	Timer_Mode_PWM_Config(&TIM_Handle, &PWM_Handle, TIM_OCMODE_PWM2, TIM_OCPOLARITY_HIGH);
 	/* USER CODE END Init */
 
 	/* Configure the system clock */
@@ -118,11 +132,14 @@ int main(void)
 	/* Initialize all configured peripherals */
 	MX_GPIO_Init();
 	MX_USART2_UART_Init();
+	MX_TIM1_Init();
 	/* USER CODE BEGIN 2 */
-	HAL_UART_Transmit(&huart2, (uint8_t *)"Bonjour\n", 8, 10);
-	HAL_UART_Receive_IT(&huart2, &data, 1);
-	Timer_PWM_Pulse_Channel(&htim2, &PWM_Handle, TIM_CHANNEL_2, 1500);
-	HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_2);
+	HAL_UART_Transmit(&UART_Handle, (uint8_t *)"Bonjour\n", 8, 10);
+	HAL_UART_Receive_IT(&UART_Handle, &data, 1);
+	Timer_PWM_Pulse_Channel(&TIM_Handle, &PWM_Handle, TIM_CHANNEL_3, 1500);
+	HAL_TIM_PWM_Start(&TIM_Handle, TIM_CHANNEL_3);
+	HAL_GPIO_WritePin(GPIOB,SENS_PIN,1);
+	HAL_GPIO_WritePin(GPIOB,ENABLE_PIN,0);
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -132,7 +149,10 @@ int main(void)
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		if(data_receive == 1){
+		if(counter == 8){
+			HAL_GPIO_WritePin(GPIOB,ENABLE_PIN,1);
+		}
+		/*if(data_receive == 1){
 			switch (data) {
 			case 49:
 				HAL_GPIO_WritePin(LED_PORT,LED_ALL,0);
@@ -163,11 +183,11 @@ int main(void)
 				HAL_GPIO_WritePin(LED_PORT,BLU_RED,1);
 				break;
 			case 56:
-				HAL_UART_Transmit(&huart2, (uint8_t *)"Test\n", 5, 10);
+				HAL_UART_Transmit(&UART_Handle, (uint8_t *)"Test\n", 5, 10);
 				break;
 			}
 			data_receive = 0;
-		}
+		}*/
 	}
 	/* USER CODE END 3 */
 }
@@ -211,10 +231,61 @@ void SystemClock_Config(void)
 }
 
 /**
- * @brief USART2 Initialization Function
+ * @brief TIM1 Initialization Function
  * @param None
  * @retval None
  */
+static void MX_TIM1_Init(void)
+{
+
+	/* USER CODE BEGIN TIM1_Init 0 */
+
+	/* USER CODE END TIM1_Init 0 */
+
+	TIM_MasterConfigTypeDef sMasterConfig = {0};
+	TIM_IC_InitTypeDef sConfigIC = {0};
+
+	/* USER CODE BEGIN TIM1_Init 1 */
+
+	/* USER CODE END TIM1_Init 1 */
+	htim1.Instance = TIM1;
+	htim1.Init.Prescaler = 0;
+	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim1.Init.Period = 0;
+	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim1.Init.RepetitionCounter = 0;
+	if (HAL_TIM_IC_Init(&htim1) != HAL_OK)
+	{
+		Error_Handler();
+	}
+	sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+	sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+	if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+	{
+		Error_Handler();
+	}
+	sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
+	sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+	sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+	sConfigIC.ICFilter = 0;
+	if (HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_3) != HAL_OK)
+	{
+		Error_Handler();
+	}
+	/* USER CODE BEGIN TIM1_Init 2 */
+	HAL_TIM_IC_Init(&htim1);
+
+	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3);
+	/* USER CODE END TIM1_Init 2 */
+
+}
+
+/**
+ * @brief TIM2 Initialization Function
+ * @param None
+ * @retval None
+ */
+
 static void MX_USART2_UART_Init(void)
 {
 
@@ -255,16 +326,17 @@ static void MX_GPIO_Init(void)
 	__HAL_RCC_GPIOC_CLK_ENABLE();
 	__HAL_RCC_GPIOH_CLK_ENABLE();
 	__HAL_RCC_GPIOA_CLK_ENABLE();
+	__HAL_RCC_GPIOE_CLK_ENABLE();
 
 }
 
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	if(huart == &huart2){
-		//HAL_UART_Transmit(&huart2, &data, 1, 10);
+	if(huart == &UART_Handle){
+		//HAL_UART_Transmit(&UART_Handle, &data, 1, 10);
 		data_receive = 1;
 	}
-	HAL_UART_Receive_IT(&huart2, &data, 1);
+	HAL_UART_Receive_IT(&UART_Handle, &data, 1);
 }
 /* USER CODE END 4 */
 
