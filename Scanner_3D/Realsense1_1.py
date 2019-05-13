@@ -6,6 +6,26 @@ import numpy as np
 import pyrealsense2 as rs
 import pcl
 from open3d import *
+import serial
+from serial.tools.list_ports import comports
+
+def ask_for_port():
+    for n, (port, desc, hwid) in enumerate(sorted(comports()), 1):
+        if desc == "FT232R USB UART":
+            return port
+    return 0
+
+def ports():
+    n = 0
+    while n < 5:
+        port = ask_for_port()
+        if port == 0: 
+            n = n + 1
+            print("Veuillez brancher l'UART de la STM32")
+            raw_input("Appuyer sur entree pour refaire une verification")
+        else:
+            return port
+    print("FERMETURE DU PROGRAMME")   
 
 class AppState:
     def __init__(self, *args, **kwargs):
@@ -363,7 +383,7 @@ def full_registration(pcds,
                         transformation_icp, information_icp, uncertain = True))
     return pose_graph
 
-def capture(name):
+def capture_RealSense(name):
     points = rs.points()
 
     success, frames = pipeline.try_wait_for_frames(timeout_ms=10)
@@ -382,18 +402,34 @@ def capture(name):
 
     pc.map_to(other_frame)
 
-    #points.export_to_ply("out.ply", color_source)
     ply = name + ".ply"
     pcd = name + ".pcd"
     points.export_to_ply(ply, color)
     clouding = pcl.load(ply)
     pcl.save(clouding, pcd)
     print("Export Reussi")
-    # handle color source or size change
-    #fmt = convert_fmt(mapped_frame.profile.format())
+
+ser = serial.Serial()
+ser.baudrate = 115200
+ser.port = ports()
+ser.open()
+
+def capture():
+    i=0
+    out = 0
+    nom = raw_input("Nom du fichier de sortie: ")
+    while i < 10:
+        print("")
+        nom2 = nom+("%d" % i)
+        capture_RealSense(nom2)
+        i = i+1
+        data = 55
+        ser.write([data])
+        out = ser.readline()
+    return nom 
 
 if __name__ == "__main__":
-    while 1:
+    while True:
         print("Menu des choix:")
         print("1- Visualisation")
         print("2- Capture")
@@ -405,15 +441,8 @@ if __name__ == "__main__":
         if choice == 1:
             pyglet.app.run()
         if choice == 2:
-            i=0
-            nom = input("Nom du fichier de sortie: ")
-            while i < 10:
-                print("")
-                nom2 = nom+("%d" % i)
-                capture(nom2)
-                i = i+1
+            nom5 = capture()
         if choice == 3:
-            nom = input("Nom du fichier de sortie: ")
             set_verbosity_level(VerbosityLevel.Debug)
             pcds_down = load_point_clouds(nom, voxel_size)
 
@@ -430,11 +459,8 @@ if __name__ == "__main__":
                     GlobalOptimizationConvergenceCriteria(), option)
 
             for point_id in range(len(pcds_down)):
-                print(pose_graph.nodes[point_id].pose)
                 pcds_down[point_id].transform(pose_graph.nodes[point_id].pose)
-            draw_geometries(pcds_down)
 
-            print("Make a combined point cloud")
             pcds = load_point_clouds(voxel_size)
             pcd_combined = PointCloud()
             for point_id in range(len(pcds)):
@@ -442,7 +468,6 @@ if __name__ == "__main__":
                 pcd_combined += pcds[point_id]
             pcd_combined_down = voxel_down_sample(pcd_combined, voxel_size = voxel_size)
             write_point_cloud("multiway_registration.pcd", pcd_combined_down)
-            draw_geometries([pcd_combined_down])
         if choice == 4:
             print("Vous pouvez convertir votre fichier en:")
             print("OBJ")

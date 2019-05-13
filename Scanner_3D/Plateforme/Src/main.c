@@ -56,6 +56,10 @@
 #define ENABLE_PIN	GPIO_PIN_0
 #define SENS_PIN	GPIO_PIN_3
 #define PWM_PIN		GPIO_PIN_8
+
+#define DISABLE_MOTOR	HAL_GPIO_WritePin(GPIOB,ENABLE_PIN,1);
+#define ENABLE_MOTOR	HAL_GPIO_WritePin(GPIOB,ENABLE_PIN,0);
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -117,7 +121,7 @@ int main(void)
 	GPIO_Configuration(GPIOB, GPIO_MODE_OUTPUT_PP, ENABLE_PIN | SENS_PIN);
 	GPIO_Configuration_Alternate(GPIOC, GPIO_MODE_AF_PP, GPIO_PIN_8,GPIO_AF2_TIM3);
 	GPIO_Configuration(LED_PORT, GPIO_MODE_OUTPUT_PP, LED_ALL);
-	Timer_Config(&TIM_Handle, TIM3, 1, 4000);
+	Timer_Config(&TIM_Handle, TIM3, 0, 4000);
 
 	Timer_Mode_PWM_Config(&TIM_Handle, &PWM_Handle, TIM_OCMODE_PWM2, TIM_OCPOLARITY_HIGH);
 	/* USER CODE END Init */
@@ -134,12 +138,14 @@ int main(void)
 	MX_USART2_UART_Init();
 	MX_TIM1_Init();
 	/* USER CODE BEGIN 2 */
-	HAL_UART_Transmit(&UART_Handle, (uint8_t *)"Bonjour\n", 8, 10);
-	HAL_UART_Receive_IT(&UART_Handle, &data, 1);
+	//HAL_UART_Transmit(&huart2, (uint8_t *)"Bonjour\n", 8, 10);
+	HAL_UART_Receive_IT(&huart2, &data, 1);
 	Timer_PWM_Pulse_Channel(&TIM_Handle, &PWM_Handle, TIM_CHANNEL_3, 1500);
 	HAL_TIM_PWM_Start(&TIM_Handle, TIM_CHANNEL_3);
 	HAL_GPIO_WritePin(GPIOB,SENS_PIN,1);
-	HAL_GPIO_WritePin(GPIOB,ENABLE_PIN,0);
+	DISABLE_MOTOR;
+
+	unsigned char data_send = 0xaa;
 	/* USER CODE END 2 */
 
 	/* Infinite loop */
@@ -149,45 +155,15 @@ int main(void)
 		/* USER CODE END WHILE */
 
 		/* USER CODE BEGIN 3 */
-		if(counter == 8){
-			HAL_GPIO_WritePin(GPIOB,ENABLE_PIN,1);
-		}
-		/*if(data_receive == 1){
-			switch (data) {
-			case 49:
-				HAL_GPIO_WritePin(LED_PORT,LED_ALL,0);
-				HAL_GPIO_WritePin(LED_PORT,BLUE,1);
-				break;
-			case 50:
-				HAL_GPIO_WritePin(LED_PORT,LED_ALL,0);
-				HAL_GPIO_WritePin(LED_PORT,RED,1);
-				break;
-			case 51:
-				HAL_GPIO_WritePin(LED_PORT,LED_ALL,0);
-				HAL_GPIO_WritePin(LED_PORT,GREEN,1);
-				break;
-			case 52:
-				HAL_GPIO_WritePin(LED_PORT,LED_ALL,0);
-				HAL_GPIO_WritePin(LED_PORT,ORANGE,1);
-				break;
-			case 53:
-				HAL_GPIO_WritePin(LED_PORT,LED_ALL,0);
-				HAL_GPIO_WritePin(LED_PORT,LED_ALL,1);
-				break;
-			case 54:
-				HAL_GPIO_WritePin(LED_PORT,LED_ALL,0);
-				HAL_GPIO_WritePin(LED_PORT,GRE_ORA,1);
-				break;
-			case 55:
-				HAL_GPIO_WritePin(LED_PORT,LED_ALL,0);
-				HAL_GPIO_WritePin(LED_PORT,BLU_RED,1);
-				break;
-			case 56:
-				HAL_UART_Transmit(&UART_Handle, (uint8_t *)"Test\n", 5, 10);
-				break;
-			}
+		if(data_receive){
+			counter = 0;
+			ENABLE_MOTOR;
+			while(counter != 800);
+			DISABLE_MOTOR;
+			HAL_UART_Transmit(&huart2, &data_send, 1, 10);
 			data_receive = 0;
-		}*/
+		}
+
 	}
 	/* USER CODE END 3 */
 }
@@ -251,7 +227,7 @@ static void MX_TIM1_Init(void)
 	htim1.Instance = TIM1;
 	htim1.Init.Prescaler = 0;
 	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-	htim1.Init.Period = 0;
+	htim1.Init.Period = 4000;
 	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
 	htim1.Init.RepetitionCounter = 0;
 	if (HAL_TIM_IC_Init(&htim1) != HAL_OK)
@@ -332,11 +308,11 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	if(huart == &UART_Handle){
+	if(huart == &huart2){
 		//HAL_UART_Transmit(&UART_Handle, &data, 1, 10);
 		data_receive = 1;
 	}
-	HAL_UART_Receive_IT(&UART_Handle, &data, 1);
+	HAL_UART_Receive_IT(&huart2, &data, 1);
 }
 /* USER CODE END 4 */
 
