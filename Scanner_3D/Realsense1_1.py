@@ -1,4 +1,5 @@
 import math
+import sys
 import ctypes
 import pyglet
 import pyglet.gl as gl
@@ -341,7 +342,7 @@ pyglet.clock.schedule(run)
 
 def load_point_clouds(name, voxel_size = 0.0):
     pcds = []
-    for i in range(10):
+    for i in range(16):
         nom3 = name + ("%d" % i) + (".pcd")
         pcd = read_point_cloud(nom3)
         pcd_down = voxel_down_sample(pcd, voxel_size = voxel_size)
@@ -408,6 +409,8 @@ def capture_RealSense(name):
     clouding = pcl.load(ply)
     pcl.save(clouding, pcd)
     print("Export Reussi")
+    
+    print(points)
 
 ser = serial.Serial()
 ser.baudrate = 115200
@@ -418,14 +421,14 @@ def capture():
     i=0
     out = 0
     nom = raw_input("Nom du fichier de sortie: ")
-    while i < 10:
+    while i < 16:
         print("")
         nom2 = nom+("%d" % i)
         capture_RealSense(nom2)
         i = i+1
         data = 55
         ser.write([data])
-        out = ser.readline()
+        out = ser.read()
     return nom 
 
 if __name__ == "__main__":
@@ -444,7 +447,7 @@ if __name__ == "__main__":
             nom5 = capture()
         if choice == 3:
             set_verbosity_level(VerbosityLevel.Debug)
-            pcds_down = load_point_clouds(nom, voxel_size)
+            pcds_down = load_point_clouds(nom5, voxel_size)
 
             pose_graph = full_registration(pcds_down,
                     max_correspondence_distance_coarse,
@@ -479,4 +482,4 @@ if __name__ == "__main__":
         if choice == 5:
             print("Visualisation modele finale")
         if choice == 6:
-            quit
+            sys.exit(0)
