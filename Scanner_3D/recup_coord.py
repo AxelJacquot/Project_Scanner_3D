@@ -28,15 +28,11 @@ while i < taille:
     mot3 = ''
     mot = ''
     contenu_line_tmp = [0,0,0]
-    contenu_line = [0,0,0]
-    test_tmp = ''
     test = ''
     test = contenu[i]
     taille_contenu = len(test)
-    for j in range(taille_contenu):
-        if test[j] != '\n':
-            test_tmp = test_tmp + test[j]
-    contenu_line_tmp = test_tmp.split(" ")
+    test = test.replace('\n','')
+    contenu_line_tmp = test.split(" ")
     
     points = np.array([[float(contenu_line_tmp[0])],
                        [float(contenu_line_tmp[1])],
