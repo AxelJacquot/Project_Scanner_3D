@@ -161,8 +161,8 @@ int main(void)
 
 		/* USER CODE BEGIN 3 */
 		if(data_receive){
-			ENABLE_MOTOR;
 			counter = 0;
+			ENABLE_MOTOR;
 			while(counter != 400);
 			DISABLE_MOTOR;
 			HAL_UART_Transmit(&huart2, &data_send, 1, 10);

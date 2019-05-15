@@ -12,16 +12,18 @@ rotY = np.array([[math.cos(angle_radian),0,math.sin(angle_radian)],
 
 mon_fichier = open("test0.pcd", "r")
 
+mon_pcd = open("test_0.pcd", "w")
+mon_pcd.write('')
+mon_pcd.close()
+
 mon_pcd = open("test_0.pcd", "a")
 
 contenu = mon_fichier.readlines()
 taille = len(contenu)
 
 for i in range(11):
-    print(contenu[i])
     mon_pcd.write(contenu[i])
 i = i + 1
-n = 0
 while i < taille:
     mot1 = ''
     mot2 = ''
@@ -29,6 +31,7 @@ while i < taille:
     mot = ''
     contenu_line_tmp = [0,0,0]
     test = ''
+    
     test = contenu[i]
     taille_contenu = len(test)
     test = test.replace('\n','')
@@ -54,11 +57,9 @@ while i < taille:
     
     mot = mot1 + ' ' + mot2 + ' ' + mot3 + '\n'
     
-    print(mot)
-    
     mon_pcd.write(mot)
     
     i = i + 1
-
+    
 mon_pcd.close()
 mon_fichier.close()

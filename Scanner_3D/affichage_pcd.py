@@ -2,7 +2,7 @@ import pcl
 from open3d import *
 import numpy as np
 
-voxel_size = 0.02
+voxel_size = 0.0001
 
 
 def load_point_clouds(voxel_size = 0.0):

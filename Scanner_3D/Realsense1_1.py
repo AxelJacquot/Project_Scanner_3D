@@ -6,6 +6,7 @@ import pyglet.gl as gl
 import numpy as np
 import pyrealsense2 as rs
 import pcl
+import os
 from open3d import *
 import serial
 from serial.tools.list_ports import comports
@@ -409,8 +410,6 @@ def capture_RealSense(name):
     clouding = pcl.load(ply)
     pcl.save(clouding, pcd)
     print("Export Reussi")
-    
-    print(points)
 
 ser = serial.Serial()
 ser.baudrate = 115200
@@ -446,7 +445,6 @@ if __name__ == "__main__":
         if choice == 2:
             nom5 = capture()
         if choice == 3:
-            set_verbosity_level(VerbosityLevel.Debug)
             pcds_down = load_point_clouds(nom5, voxel_size)
 
             pose_graph = full_registration(pcds_down,
@@ -473,13 +471,17 @@ if __name__ == "__main__":
             write_point_cloud("multiway_registration.pcd", pcd_combined_down)
         if choice == 4:
             print("Vous pouvez convertir votre fichier en:")
-            print("OBJ")
-            print("STL")
-            print("PLY")
-            print("PCD")
-            print("VTK")
-            format_convert = input("Format choisie: ")
+            print("obj")
+            print("stl")
+            print("ply")
+            print("pcd")
+            print("vtk")
+            format_convert = input_raw("Format choisie: ")
+            
+            cmd = './pcl_converter ' + nom5 + '.pcd ' + nom5 + '.' + format_convert
+            os.popen(cmd)
         if choice == 5:
             print("Visualisation modele finale")
         if choice == 6:
+            os.remove('test_0.pcd')
             sys.exit(0)
