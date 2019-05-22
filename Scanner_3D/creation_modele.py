@@ -8,8 +8,8 @@ angle_degree = 90
 angle_radian = math.radians(angle_degree)
 
 transZ = np.array(  [[0]  ,
-                          [0]  ,
-                          [0.3080+0.055]]  )
+                     [0]  ,
+                     [0.3080+0.055]]  )
 
 rotZ = np.array(   [[math.cos(angle_radian),    0, math.sin(angle_radian)],
                     [0                     ,    1, 0                     ],
