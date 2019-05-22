@@ -2,23 +2,13 @@ import os
 import numpy as np
 import math
 
-angle_degree = 90
-# -0.25
-# -0.3080-0.055
-angle_radian = math.radians(angle_degree)
+mon_fichier = open("test2.pcd", "r")
 
-rotZ_Homo = np.array(  [[math.cos(angle_radian), 0  , math.sin(angle_radian),    0],
-                        [0,                       1 ,     0,    0],
-                        [-(math.sin(angle_radian)), 0,math.cos(angle_radian),    0],
-                        [0,                       0,                          0,    1]])
-
-mon_fichier = open("calib4.pcd", "r")
-
-mon_pcd = open("calib5.pcd", "w")
+mon_pcd = open("test_1.pcd", "w")
 mon_pcd.write('')
 mon_pcd.close()
 
-mon_pcd = open("calib5.pcd", "a")
+mon_pcd = open("test_1.pcd", "a")
 
 contenu = mon_fichier.readlines()
 taille = len(contenu)
@@ -38,14 +28,12 @@ while i < taille:
     taille_contenu = len(test)
     test = test.replace('\n','')
     contenu_line_tmp = test.split(" ")
-    print(contenu_line_tmp)
     
-    points = np.array([[float(contenu_line_tmp[0])],
-                       [float(contenu_line_tmp[1])],
-                       [float(contenu_line_tmp[2])],
-                       [1]])
+    points = np.array([ [float(contenu_line_tmp[0])],
+                        [float(contenu_line_tmp[1])],
+                        [float(contenu_line_tmp[2])] ])
     
-    pointsf = np.dot(rotZ_Homo, points)
+    pointsf = 100 * points
     
     mot1 = str(pointsf[0])
     mot1 = mot1.replace('[','')
@@ -68,3 +56,7 @@ while i < taille:
     
 mon_pcd.close()
 mon_fichier.close()
+
+mon_pcd = open("test_1.pcd", "r")
+print(mon_pcd.read())
+mon_pcd.close()

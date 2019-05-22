@@ -370,11 +370,6 @@ def capture_RealSense(name):
     pcl.save(clouding, pcd)
     print("Export Reussi")
 
-ser = serial.Serial()
-ser.baudrate = 115200
-ser.port = ports()
-ser.open()
-
 def capture():
     i=0
     out = 0
@@ -404,7 +399,7 @@ if __name__ == "__main__":
         if choice == 2:
             nom5 = capture()
         if choice == 3:
-            
+            capture_RealSense("Calib")
         if choice == 4:
             print("Vous pouvez convertir votre fichier en:")
             print("obj")

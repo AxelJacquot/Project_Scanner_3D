@@ -123,7 +123,7 @@ int main(void)
 	GPIO_Configuration(GPIOB, GPIO_MODE_OUTPUT_PP, ENABLE_PIN | SENS_PIN);
 	GPIO_Configuration_Alternate(GPIOC, GPIO_MODE_AF_PP, GPIO_PIN_8,GPIO_AF2_TIM3);
 	GPIO_Configuration(LED_PORT, GPIO_MODE_OUTPUT_PP, LED_ALL);
-	Timer_Config(&TIM_Handle, TIM3, 0, 4000);
+	Timer_Config(&TIM_Handle, TIM3, 32, 4000);
 
 	Timer_Mode_PWM_Config(&TIM_Handle, &PWM_Handle, TIM_OCMODE_PWM2, TIM_OCPOLARITY_HIGH);
 	/* USER CODE END Init */
@@ -231,7 +231,7 @@ static void MX_TIM1_Init(void)
 
 	/* USER CODE END TIM1_Init 1 */
 	htim1.Instance = TIM1;
-	htim1.Init.Prescaler = 0;
+	htim1.Init.Prescaler = 32;
 	htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
 	htim1.Init.Period = 4000;
 	htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;

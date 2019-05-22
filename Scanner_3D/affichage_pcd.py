@@ -6,11 +6,8 @@ voxel_size = 0.0001
 
 
 def load_point_clouds(voxel_size = 0.0):
-    pcds = []
-    pcd = read_point_cloud("test_0.pcd")
-    pcd_down = voxel_down_sample(pcd, voxel_size = voxel_size)
-    pcds.append(pcd_down)
-    return pcds
+    pcd = read_point_cloud("calib5.pcd")
+    return [pcd]
 
 if __name__ == "__main__":
 
