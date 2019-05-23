@@ -2,13 +2,13 @@ import os
 import numpy as np
 import math
 
-mon_fichier = open("Calib.pcd", "r")
+mon_fichier = open("test0.pcd", "r")
 
-mon_pcd = open("calib2.pcd", "w")
+mon_pcd = open("test_0.pcd", "w")
 mon_pcd.write('')
 mon_pcd.close()
 
-mon_pcd = open("calib2.pcd", "a")
+mon_pcd = open("test_0.pcd", "a")
 
 contenu = mon_fichier.readlines()
 taille = len(contenu)
@@ -33,9 +33,8 @@ while i < taille:
                        [float(contenu_line_tmp[1])],
                        [float(contenu_line_tmp[2])]])
     
-    if(points[1] < 1 and points[1] > 0.005 and points[2] > -0.4  and points[2] < -0.3 and points[0] > -0.15 and points[0] < 0.15):
-        test_point = -points[2] * math.tan(math.radians(10))
-        print(test_point)
+    if(points[2] > -0.4  and points[2] < -0.35 and points[0] > -0.15 and points[0] < 0.15):
+        test_point = -points[2] * math.tan(math.radians(3.8))
         if (points[0] < test_point and points[0] > -test_point):
             mot1 = str(points[0])
             mot1 = mot1.replace('[','')
@@ -58,7 +57,3 @@ while i < taille:
     
 mon_pcd.close()
 mon_fichier.close()
-
-''' mon_pcd = open("test_0.pcd", "r")
-print(mon_pcd.read())
-mon_pcd.close() '''

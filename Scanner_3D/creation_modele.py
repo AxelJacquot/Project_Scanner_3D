@@ -28,9 +28,6 @@ mon_pcd = open("calib5.pcd", "a")
 
 taille = len(contenu)
 
-''' for i in range(11):
-    mon_pcd.write(contenu[i])
-i = i + 1 '''
 i=0
 while i < taille:
     mot1 = ''
@@ -62,7 +59,6 @@ while i < taille:
     mot3 = str(pointsf[2])
     mot3 = mot3.replace('[','')
     mot3 = mot3.replace(']','')
-    
     
     if i != (taille - 1):
         mot = mot1 + ' ' + mot2 + ' ' + mot3 + '\n'
@@ -118,6 +114,5 @@ while i < taille:
     mon_pcd.write(mot)
     
     i = i + 1
-    
     
 mon_pcd.close()

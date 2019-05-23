@@ -163,7 +163,7 @@ int main(void)
 		if(data_receive){
 			counter = 0;
 			ENABLE_MOTOR;
-			while(counter != 400);
+			while(counter != 64);
 			DISABLE_MOTOR;
 			HAL_UART_Transmit(&huart2, &data_send, 1, 10);
 			data_receive = 0;
