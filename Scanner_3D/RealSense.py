@@ -261,7 +261,6 @@ def run(dt):
 
     depth_frame = frames.get_depth_frame()
     other_frame = frames.first(other_stream)
-    color = frames.get_color_frame()
 
     depth_frame = decimate.process(depth_frame)
 
@@ -369,7 +368,6 @@ def capture(name):
     success, frames = pipeline.try_wait_for_frames(timeout_ms=10)
 
     depth_frame = frames.get_depth_frame()
-    other_frame = frames.first(other_stream)
     color = frames.get_color_frame()
 
     depth_frame = decimate.process(depth_frame)
@@ -379,16 +377,16 @@ def capture(name):
             depth_frame = f.process(depth_frame)
 
     points = pc.calculate(depth_frame)
-
-    pc.map_to(other_frame)
+    
+    print(points.get_vertices())
 
     #points.export_to_ply("out.ply", color_source)
-    ply = name + ".ply"
+    ''' ply = name + ".ply"
     pcd = name + ".pcd"
     points.export_to_ply(ply, color)
     clouding = pcl.load(ply)
     pcl.save(clouding, pcd)
-    print("Export Reussi")
+    print("Export Reussi") '''
     # handle color source or size change
     #fmt = convert_fmt(mapped_frame.profile.format())
 

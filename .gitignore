@@ -122,3 +122,7 @@ Scanner_3D/\.vscode/settings\.json
 \.vscode/ipch/ff3ad105932d2ab7/main\.ipch
 
 \.vscode/ipch/ff3ad105932d2ab7/mmap_address\.bin
+
+*.ipch
+
+Scanner_3D/\.vscode/ipch/57e89511f6944f0f/mmap_address\.bin

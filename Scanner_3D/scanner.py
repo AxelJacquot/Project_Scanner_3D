@@ -12,6 +12,15 @@ from open3d import *
 import serial
 from serial.tools.list_ports import comports
 
+modele = []
+angle_degree = 3.6
+calibration = 0
+
+def clear():
+    print("\033c")
+    
+clear()
+
 def ask_for_port():
     for n, (port, desc, hwid) in enumerate(sorted(comports()), 1):
         if desc == "FT232R USB UART":
@@ -28,7 +37,8 @@ def ports():
             raw_input("Appuyer sur entree pour refaire une verification")
         else:
             return port
-    print("FERMETURE DU PROGRAMME")   
+    print("FERMETURE DU PROGRAMME")
+    sys.exit(0)
     
 ser = serial.Serial()
 ser.baudrate = 115200
@@ -84,9 +94,9 @@ filters = [rs.disparity_transform(),
 
 # pyglet
 window = pyglet.window.Window(
-    config=gl.Config(
-        double_buffer=True,
-        samples=16  # MSAA
+    config = gl.Config(
+        double_buffer = True,
+        samples = 8  # MSAA
     ),
     resizable=True, vsync=True)
 keys = pyglet.window.key.KeyStateHandler()
@@ -97,7 +107,7 @@ def convert_fmt(fmt):
     return {
         rs.format.rgb8: 'RGB',
         rs.format.bgr8: 'BGR',
-        rs.format.rgba8: 'RGBA',
+        rs.format.rgba8: '16RGBA',
         rs.format.bgra8: 'BGRA',
         rs.format.y8: 'L',
     }[fmt]
@@ -153,9 +163,6 @@ def on_key_press(symbol, modifiers):
     if symbol == pyglet.window.key.D:
         state.decimate = (state.decimate + 1) % 3
         decimate.set_option(rs.option.filter_magnitude, 2 ** state.decimate)
-
-    if symbol == pyglet.window.key.C:
-        state.color ^= True
 
     if symbol == pyglet.window.key.F:
         state.postprocessing ^= True
@@ -264,7 +271,7 @@ def run(dt):
     depth_frame = frames.get_depth_frame()
     other_frame = frames.first(other_stream)
     color = frames.get_color_frame()
-
+    
     depth_frame = decimate.process(depth_frame)
 
     if state.postprocessing:
@@ -329,7 +336,7 @@ def capture_RealSense(name):
     depth_frame = frames.get_depth_frame()
     other_frame = frames.first(other_stream)
     color = frames.get_color_frame()
-
+    
     depth_frame = decimate.process(depth_frame)
 
     if state.postprocessing:
@@ -348,42 +355,8 @@ def capture_RealSense(name):
     print("Export Reussi")
     
 calibration = 0
- 
-def calibration_scanner():
-    capture_RealSense("calibration")
     
-    mon_fichier = open("calibration.pcd", "r")
-
-    contenu = mon_fichier.readlines()
-    taille = len(contenu)
-    i = 11
-    while i < taille:
-        mot1 = ''
-        mot2 = ''
-        mot3 = ''
-        mot = ''
-        contenu_line_tmp = [0,0,0]
-        test = ''
-        
-        test = contenu[i]
-        taille_contenu = len(test)
-        test = test.replace('\n','')
-        contenu_line_tmp = test.split(" ")
-        
-        points = np.array([[float(contenu_line_tmp[0])],
-                        [float(contenu_line_tmp[1])],
-                        [float(contenu_line_tmp[2])]])
-        
-        if(points[1] < 1 and points[1] > 0.005 and points[2] > -0.4  and points[2] < -0.3 and points[0] > -0.15 and points[0] < 0.15):
-            calibration = points[2]
-        
-        i = i + 1
-        
-    mon_fichier.close()
-    
-def modele_creation(fichier_central, fichier_source):
-    angle_degree = 3.6
-    
+def modele_creation(fichier_source):
     angle_radian = math.radians(angle_degree)
 
     transZ = np.array(  [[0]  ,
@@ -393,52 +366,20 @@ def modele_creation(fichier_central, fichier_source):
     rotZ = np.array(   [[math.cos(angle_radian),    0, math.sin(angle_radian)],
                         [0                     ,    1, 0                     ],
                         [-(math.sin(angle_radian)), 0, math.cos(angle_radian)]]  )
-
-    mon_fichier = open(fichier_central, "r")
-    contenu = mon_fichier.readlines()
-    mon_fichier.close()
-
-    mon_pcd = open(fichier_central, "a")
-
-    taille = len(contenu)
+    
+    taille = len(modele)
 
     i=0
+    
     while i < taille:
-        mot1 = ''
-        mot2 = ''
-        mot3 = ''
-        mot = ''
         contenu_line_tmp = [0,0,0]
         test = ''
         
-        test = contenu[i]
-        taille_contenu = len(test)
-        test = test.replace('\n','')
-        contenu_line_tmp = test.split(" ")
+        test = modele[i]
         
-        points = np.array([[float(contenu_line_tmp[0])],
-                        [float(contenu_line_tmp[1])],
-                        [float(contenu_line_tmp[2])]])
+        pointsf = np.dot(x, test)
         
-        pointsf = np.dot(rotZ, points)
-        
-        mot1 = str(pointsf[0])
-        mot1 = mot1.replace('[','')
-        mot1 = mot1.replace(']','')
-        
-        mot2 = str(pointsf[1])
-        mot2 = mot2.replace('[','')
-        mot2 = mot2.replace(']','')
-        
-        mot3 = str(pointsf[2])
-        mot3 = mot3.replace('[','')
-        mot3 = mot3.replace(']','')
-        
-        if i != (taille - 1):
-            mot = mot1 + ' ' + mot2 + ' ' + mot3 + '\n'
-        else:
-            mot = mot1 + ' ' + mot2 + ' ' + mot3
-        mon_pcd.write(mot)
+        modele[i] = pointsf
         
         i = i + 1
 
@@ -447,96 +388,125 @@ def modele_creation(fichier_central, fichier_source):
     mon_fichier.close()
     
     taille = len(contenu)
-    
-    mon_pcd.write('\n')
 
     i=11
     while i < taille:
-        mot1 = ''
-        mot2 = ''
-        mot3 = ''
-        mot = ''
         contenu_line_tmp = [0,0,0]
         test = ''
         
         test = contenu[i]
-        taille_contenu = len(test)
         test = test.replace('\n','')
         contenu_line_tmp = test.split(" ")
         
         points = np.array([[float(contenu_line_tmp[0])],
                         [float(contenu_line_tmp[1])],
                         [float(contenu_line_tmp[2])]])
-        if(points[1] < 1 and points[1] > 0.005 and points[2] > -0.4  and points[2] < -0.3 and points[0] > -0.15 and points[0] < 0.15):
-            test_point = calibration * math.tan(math.radians(10))
+        if(points[2] > -0.4  and points[2] < -0.35 and points[0] > -0.15 and points[0] < 0.15):
+            test_point = calibration * math.tan(math.radians(3.6/10))
             if (points[0] < test_point and points[0] > -test_point):
                 
                 pointsf = transZ + points
                 
-                mot1 = str(pointsf[0])
-                mot1 = mot1.replace('[','')
-                mot1 = mot1.replace(']','')
-                
-                mot2 = str(pointsf[1])
-                mot2 = mot2.replace('[','')
-                mot2 = mot2.replace(']','')
-                
-                mot3 = str(pointsf[2])
-                mot3 = mot3.replace('[','')
-                mot3 = mot3.replace(']','')
-                
-                
-                if i != (taille - 1):
-                    mot = mot1 + ' ' + mot2 + ' ' + mot3 + '\n'
-                else:
-                    mot = mot1 + ' ' + mot2 + ' ' + mot3
-                mon_pcd.write(mot)
+                modele.append(pointsf)
         
         i = i + 1
         
-    mon_pcd.close()
+def creation_pcd(nom_pcd):
+    i=0 
+    
+    taille = len(modele)
 
-def capture():
+    file = open("test_pcd.pcd", "w")
+    file.write("")
+    file.close()
+
+    file = open("test_pcd.pcd", "a")
+    mot = ("# .PCD v0.7 - Point Cloud Data file format \n" +
+           "FIELDS x y z\n" +
+           "SIZE 4 4 4\n" +
+           "TYPE F F F\n" +
+           "COUNT 1 1 1\n" +
+           "WIDTH " + str(taille) + "\n" +
+           "HEIGHT 1\n" +
+           "VIEWPOINT 0 0 0 1 0 0 0\n" +
+           "POINTS " + str(taille) + "\n" +
+           "DATA ascii\n")
+    file.write(mot)
+    while i < taille:
+        points = modele[i]
+        mot1 = str(points[0])
+        mot1 = mot1.replace('[','')
+        mot1 = mot1.replace(']','')
+        
+        mot2 = str(points[1])
+        mot2 = mot2.replace('[','')
+        mot2 = mot2.replace(']','')
+        
+        mot3 = str(points[2])
+        mot3 = mot3.replace('[','')
+        mot3 = mot3.replace(']','')
+        
+        
+        if i != (taille - 1):
+            mot = mot1 + ' ' + mot2 + ' ' + mot3 + '\n'
+        else:
+            mot = mot1 + ' ' + mot2 + ' ' + mot3
+            
+        file.write(mot)
+        i = i + 1
+
+    file.close()
+    
+
+def capture(nom2):
     i=0
     out = 0
-    nom = raw_input("Nom du fichier de sortie: ")
     while i < 100:
         print("")
-        nom2 = nom+("%d" % i)
-        capture_RealSense(nom2)
+        nom3 = nom2+("%d" % i)
+        capture_RealSense(nom3)
         i = i+1
         data = 55
         ser.write([data])
         out = ser.read()
-    return nom 
 
 if __name__ == "__main__":
     while True:
         print("Menu des choix:")
-        print("1- Calibration")
-        print("2- Capture")
-        print("3- Fabrication du modele complet")
-        print("4- Conversion du fichier 3D")
+        print("1- Visualisation")
+        print("2- Calibration")
+        print("3- Capture")
+        print("4- Fabrication du modele complet")
         print("5- Visualisation du modele final")
-        print("6- Quitter")
+        print("6- Conversion du fichier 3D")
+        print("7- Quitter")
         choice = input("Faites votre choix: ")
         if choice == 1:
+            print("La touche Q permet de quitter l'application de visualisation")
+            print("La touche R permet une remise a zero de la visualisation")
+            print("La touche P permet de mettre en pause l'application de visualisation")
+            print("La touche F permet d'activer ou de desactive le post-prcessing")
+            print("La touche D permet de reduire la qualite de prise de la camera")
             pyglet.app.run()
-            calibration_scanner()
-            
         if choice == 2:
-            nom5 = capture()
+            print("Veuillez donner les distances en mm s'il vous plait")
+            distance_cam_plat = input("Distance entre la camera et le centre de la plateforme : ")
+            hauteur_cible = input("Hauteur de la cible : ")
+            hauteur_camera = input("Hauteur de la camera : ")
         if choice == 3:
+            nom = raw_input("Nom du fichier de sortie: ")
+            capture(nom)
+        if choice == 4:
             j = 0
             fichier_source = ''
-            my_file = open("modele.pcd", "w")
-            my_file.write('')
-            my_file.close()
             while j < 100:
-                fichier_source = nom5 + str(j) + ".pcd"
-                modele_creation("modele.pcd",fichier_source)
+                fichier_source = nom + str(j) + ".pcd"
+                modele_creation(fichier_source)
                 j = j + 1
-        if choice == 4:
+                print(j)
+            nom_pcd = nom + ".pcd"
+            creation_pcd(nom_pcd)
+        if choice == 6:
             print("Vous pouvez convertir votre fichier en:")
             print("obj")
             print("stl")
@@ -545,10 +515,15 @@ if __name__ == "__main__":
             print("vtk")
             format_convert = raw_input("Format choisie: ")
             
-            cmd = './pcl_converter ' + nom5 + '.pcd ' + nom5 + '.' + format_convert
+            cmd = ('./pcl_converter ' + nom + '.pcd ' + 
+                   nom + '.' + format_convert)
             os.popen(cmd)
+            
         if choice == 5:
-            print("Visualisation modele finale")
-        if choice == 6:
+            
+            pcd = read_point_cloud(nom_pcd)
+            draw_geometries([pcd])
+        if choice == 7:
             os.remove('test_0.pcd')
             sys.exit(0)
+        clear()
