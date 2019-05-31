@@ -33,8 +33,8 @@ while i < taille:
                        [float(contenu_line_tmp[1])],
                        [float(contenu_line_tmp[2])]])
     
-    if(points[2] > -0.4  and points[2] < -0.35 and points[0] > -0.15 and points[0] < 0.15):
-        test_point = -points[2] * math.tan(math.radians(3.8))
+    if(points[2] > -0.5  and points[2] < -0.32 and points[0] > -0.25 and points[0] < 0.25):
+        test_point = -points[2] * math.tan(math.radians(3.6))
         if (points[0] < test_point and points[0] > -test_point):
             mot1 = str(points[0])
             mot1 = mot1.replace('[','')

@@ -4,7 +4,7 @@ import numpy as np
 
 modele = []
 angle_degree = 3.6
-calibration = 0.4
+calibration = 0.38
 
 def modele_creation(fichier_source):
     
@@ -52,7 +52,7 @@ def modele_creation(fichier_source):
         points = np.array([[float(contenu_line_tmp[0])],
                         [float(contenu_line_tmp[1])],
                         [float(contenu_line_tmp[2])]])
-        if(points[2] > -0.4  and points[2] < -0.35 and points[0] > -0.15 and points[0] < 0.15):
+        if(points[2] > -0.5  and points[2] < -0.32 and points[0] > -0.25 and points[0] < 0.25):
             test_point = calibration * math.tan(math.radians(3.6/10))
             if (points[0] < test_point and points[0] > -test_point):
                 
