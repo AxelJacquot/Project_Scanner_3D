@@ -520,7 +520,6 @@ if __name__ == "__main__":
             os.popen(cmd)
             
         if choice == 5:
-            
             pcd = read_point_cloud(nom_pcd)
             draw_geometries([pcd])
         if choice == 7:

@@ -11,8 +11,8 @@ def modele_creation(fichier_source):
     angle_radian = math.radians(angle_degree)
 
     transZ = np.array(  [[0]  ,
-                        [0]  ,
-                        [calibration]]  )
+                         [0]  ,
+                         [calibration]]  )
 
     rotZ = np.array(   [[math.cos(angle_radian),    0, math.sin(angle_radian)],
                         [0                     ,    1, 0                     ],
@@ -52,7 +52,7 @@ def modele_creation(fichier_source):
         points = np.array([[float(contenu_line_tmp[0])],
                         [float(contenu_line_tmp[1])],
                         [float(contenu_line_tmp[2])]])
-        if(points[2] > -0.5  and points[2] < -0.32 and points[0] > -0.25 and points[0] < 0.25):
+        if(points[2] > -0.6  and points[2] < -0.31 and points[0] > -0.28 and points[0] < 0.28):
             test_point = calibration * math.tan(math.radians(3.6/10))
             if (points[0] < test_point and points[0] > -test_point):
                 
