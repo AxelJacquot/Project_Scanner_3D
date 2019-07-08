@@ -53,12 +53,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define ENABLE_PIN	GPIO_PIN_0
-#define SENS_PIN	GPIO_PIN_3
+#define SENS_PIN	GPIO_PIN_0
+#define ENABLE_PIN	GPIO_PIN_7
 #define PWM_PIN		GPIO_PIN_8
 
-#define DISABLE_MOTOR	HAL_GPIO_WritePin(GPIOB,ENABLE_PIN,1);
-#define ENABLE_MOTOR	HAL_GPIO_WritePin(GPIOB,ENABLE_PIN,0);
+#define DISABLE_MOTOR	HAL_GPIO_WritePin(GPIOD,ENABLE_PIN,0);
+#define ENABLE_MOTOR	HAL_GPIO_WritePin(GPIOD,ENABLE_PIN,1);
 
 /* USER CODE END PD */
 
@@ -68,7 +68,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim3;
 
 UART_HandleTypeDef huart2;
@@ -87,15 +86,29 @@ unsigned int counter = 0;
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_TIM1_Init(void);
 static void MX_TIM3_Init(void);
 /* USER CODE BEGIN PFP */
 
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim){
-	if (htim == &htim1){
+/*void EXTI15_10_IRQHandler(void)
+{
+	/* USER CODE BEGIN EXTI0_IRQn 0 */
+	//counter++;
+	/* USER CODE END EXTI0_IRQn 0 */
+	//HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_11);
+	/* USER CODE BEGIN EXTI0_IRQn 1 */
+
+	/* USER CODE END EXTI0_IRQn 1 */
+
+//}
+
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if ( GPIO_Pin == GPIO_PIN_11)
+	{
 		counter++;
 	}
-
 }
 /* USER CODE END PFP */
 
@@ -120,12 +133,10 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-	GPIO_Configuration(GPIOB, GPIO_MODE_OUTPUT_PP, ENABLE_PIN | SENS_PIN);
-	//GPIO_Configuration_Alternate(GPIOC, GPIO_MODE_AF_PP, GPIO_PIN_8,GPIO_AF2_TIM3);
-	GPIO_Configuration(LED_PORT, GPIO_MODE_OUTPUT_PP, LED_ALL);
-	/*Timer_Config(&TIM_Handle, TIM3, 0, 4000);
+	GPIO_Configuration(GPIOD, GPIO_MODE_OUTPUT_PP, ENABLE_PIN);
+	GPIO_Configuration(GPIOB, GPIO_MODE_OUTPUT_PP, SENS_PIN);
 
-	Timer_Mode_PWM_Config(&TIM_Handle, &PWM_Handle, TIM_OCMODE_PWM2, TIM_OCPOLARITY_HIGH);*/
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -138,14 +149,17 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
-  MX_TIM1_Init();
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
-	//HAL_UART_Transmit(&huart2, (uint8_t *)"Bonjour\n", 8, 10);
-	HAL_TIM_Base_Start_IT(&htim1); // start counting, enable UPDATE interrupt
-	HAL_TIM_IC_Start_IT(&htim1, TIM_CHANNEL_3);
+
+  GPIO_Configuration_Alternate(GPIOC, GPIO_MODE_AF_PP, GPIO_PIN_8,GPIO_AF2_TIM3);
+  	//GPIO_Configuration(LED_PORT, GPIO_MODE_OUTPUT_PP, LED_ALL);
+  	Timer_Config(&TIM_Handle, TIM3, 0, 4000);
+
+  	Timer_Mode_PWM_Config(&TIM_Handle, &PWM_Handle, TIM_OCMODE_PWM2, TIM_OCPOLARITY_HIGH);
+
 	HAL_UART_Receive_IT(&huart2, &data, 1);
-	Timer_PWM_Pulse_Channel(&TIM_Handle, &htim3, TIM_CHANNEL_3, 1500);
+	Timer_PWM_Pulse_Channel(&TIM_Handle, &PWM_Handle, TIM_CHANNEL_3, 1500);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 	HAL_GPIO_WritePin(GPIOB,SENS_PIN,1);
 	DISABLE_MOTOR;
@@ -212,67 +226,6 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief TIM1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_TIM1_Init(void)
-{
-
-  /* USER CODE BEGIN TIM1_Init 0 */
-
-  /* USER CODE END TIM1_Init 0 */
-
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_IC_InitTypeDef sConfigIC = {0};
-
-  /* USER CODE BEGIN TIM1_Init 1 */
-
-  /* USER CODE END TIM1_Init 1 */
-  htim1.Instance = TIM1;
-  htim1.Init.Prescaler = 0;
-  htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 4000;
-  htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim1.Init.RepetitionCounter = 0;
-  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_IC_Init(&htim1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
-  sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
-  sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
-  sConfigIC.ICFilter = 0;
-  if (HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM1_Init 2 */
-	HAL_TIM_IC_Init(&htim1);
-
-
-  /* USER CODE END TIM1_Init 2 */
-
-}
-
-/**
   * @brief TIM3 Initialization Function
   * @param None
   * @retval None
@@ -291,7 +244,7 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
+  htim3.Init.Prescaler = 32;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 4000;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
@@ -361,12 +314,22 @@ static void MX_USART2_UART_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
+
+  /*Configure GPIO pin : PC11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 }
 
@@ -378,6 +341,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	}
 	HAL_UART_Receive_IT(&huart2, &data, 1);
 }
+
 /* USER CODE END 4 */
 
 /**

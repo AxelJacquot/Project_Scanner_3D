@@ -11,15 +11,26 @@ import math
 from open3d import *
 import serial
 from serial.tools.list_ports import comports
+import time
+import multiprocessing
 
 modele = []
 angle_degree = 3.6
 calibration = 0
 
+
+image3d = []
+
+
+taille = 0
+
+
 def clear():
     print("\033c")
-    
+
+
 clear()
+
 
 def ask_for_port():
     for n, (port, desc, hwid) in enumerate(sorted(comports()), 1):
@@ -27,23 +38,49 @@ def ask_for_port():
             return port
     return 0
 
+
 def ports():
     n = 0
     while n < 5:
         port = ask_for_port()
-        if port == 0: 
+        if port == 0:
             n = n + 1
             print("Veuillez brancher l'UART de la STM32")
-            raw_input("Appuyer sur entree pour refaire une verification")
+            input("Appuyer sur entree pour refaire une verification")
         else:
             return port
     print("FERMETURE DU PROGRAMME")
     sys.exit(0)
-    
+
+
 ser = serial.Serial()
 ser.baudrate = 115200
 ser.port = ports()
 ser.open()
+
+
+def recup_data_cam(j):
+    global image3d
+    data_3d= []
+    if 0.5 > j[0] > -0.5:
+        if 0.5 > j[1] > -0.5:
+            if 0.5 > j[2] > -0.5:
+                if np.sum(j) != -0:
+                    return(np.array([[j[0]],
+                                     [j[1]],
+                                     [j[2]]]))
+    return np.array([0,0,0])
+
+def rotation():
+    pass
+
+def sup_occurence(lst):
+    new_list = []
+    for i in lst:
+        if np.sum(i) != 0:
+            new_list.append(i)
+    return new_list
+
 
 class AppState:
     def __init__(self, *args, **kwargs):
@@ -60,6 +97,7 @@ class AppState:
         self.pitch, self.yaw, self.distance = 0, 0, 2
         self.translation[:] = 0, 0, 1
 
+
 state = AppState()
 
 # Configure streams
@@ -67,7 +105,7 @@ pipeline = rs.pipeline()
 config = rs.config()
 
 config.enable_stream(rs.stream.depth, 1280, 720, rs.format.z16, 30)
-#other_stream, other_format = rs.stream.infrared, rs.format.y8
+# other_stream, other_format = rs.stream.infrared, rs.format.y8
 other_stream, other_format = rs.stream.color, rs.format.rgb8
 config.enable_stream(other_stream, 1280, 720, other_format, 30)
 
@@ -94,13 +132,14 @@ filters = [rs.disparity_transform(),
 
 # pyglet
 window = pyglet.window.Window(
-    config = gl.Config(
-        double_buffer = True,
-        samples = 8  # MSAA
+    config=gl.Config(
+        double_buffer=True,
+        samples=8  # MSAA
     ),
     resizable=True, vsync=True)
 keys = pyglet.window.key.KeyStateHandler()
 window.push_handlers(keys)
+
 
 def convert_fmt(fmt):
     """rs.format to pyglet format string"""
@@ -112,6 +151,7 @@ def convert_fmt(fmt):
         rs.format.y8: 'L',
     }[fmt]
 
+
 # Create a VertexList to hold pointcloud data
 # Will pre-allocates memory according to the attributes below
 vertex_list = pyglet.graphics.vertex_list(
@@ -121,7 +161,8 @@ other_profile = rs.video_stream_profile(profile.get_stream(other_stream))
 image_data = pyglet.image.ImageData(w, h, convert_fmt(
     other_profile.format()), (gl.GLubyte * (w * h * 3))())
 
-#fps_display = pyglet.clock.ClockDisplay()
+
+# fps_display = pyglet.clock.ClockDisplay()
 
 @window.event
 def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
@@ -140,18 +181,22 @@ def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
         state.translation -= (0, 0, dz)
         state.distance -= dz
 
+
 def handle_mouse_btns(x, y, button, modifiers):
     state.mouse_btns[0] ^= (button & pyglet.window.mouse.LEFT)
     state.mouse_btns[1] ^= (button & pyglet.window.mouse.RIGHT)
     state.mouse_btns[2] ^= (button & pyglet.window.mouse.MIDDLE)
 
+
 window.on_mouse_press = window.on_mouse_release = handle_mouse_btns
+
 
 @window.event
 def on_mouse_scroll(x, y, scroll_x, scroll_y):
     dz = scroll_y * 0.1
     state.translation -= (0, 0, dz)
     state.distance -= dz
+
 
 def on_key_press(symbol, modifiers):
     if symbol == pyglet.window.key.R:
@@ -170,7 +215,9 @@ def on_key_press(symbol, modifiers):
     if symbol == pyglet.window.key.Q:
         window.close()
 
+
 window.push_handlers(on_key_press)
+
 
 @window.event
 def on_draw():
@@ -213,7 +260,7 @@ def on_draw():
     gl.glColor3f(0.5, 0.5, 0.5)
     gl.glPushMatrix()
     gl.glTranslatef(0, 0.5, 0.5)
-    #grid()
+    # grid()
     gl.glPopMatrix()
 
     psz = 1
@@ -231,7 +278,7 @@ def on_draw():
 
     # comment this to get round points with MSAA on
     gl.glEnable(gl.GL_POINT_SPRITE)
-    
+
     gl.glDisable(gl.GL_MULTISAMPLE)  # for true 1px points with MSAA on
     vertex_list.draw(gl.GL_POINTS)
     gl.glDisable(texture.target)
@@ -240,8 +287,8 @@ def on_draw():
     gl.glDisable(gl.GL_LIGHTING)
 
     gl.glColor3f(0.25, 0.25, 0.25)
-    #frustum(depth_intrinsics)
-    #axes()
+    # frustum(depth_intrinsics)
+    # axes()
 
     gl.glMatrixMode(gl.GL_PROJECTION)
     gl.glLoadIdentity()
@@ -252,7 +299,8 @@ def on_draw():
     gl.glLoadIdentity()
     gl.glDisable(gl.GL_DEPTH_TEST)
 
-    #fps_display.draw()
+    # fps_display.draw()
+
 
 def run(dt):
     points = rs.points()
@@ -271,7 +319,7 @@ def run(dt):
     depth_frame = frames.get_depth_frame()
     other_frame = frames.first(other_stream)
     color = frames.get_color_frame()
-    
+
     depth_frame = decimate.process(depth_frame)
 
     if state.postprocessing:
@@ -318,6 +366,7 @@ def run(dt):
     copy(vertex_list.vertices, verts)
     copy(vertex_list.tex_coords, texcoords)
 
+
 # copy our data to pre-allocated buffers, this is faster than assigning...
 # pyglet will take care of uploading to GPU
 def copy(dst, src):
@@ -326,94 +375,134 @@ def copy(dst, src):
     np.array(dst, copy=False)[:] = src.ravel()
     # ctypes.memmove(dst, src.ctypes.data, src.nbytes)
 
+
 pyglet.clock.schedule(run)
+
 
 def capture_RealSense(name):
     points = rs.points()
+    global w, h
 
-    success, frames = pipeline.try_wait_for_frames(timeout_ms=10)
+    if state.paused:
+        return
+
+    success, frames = pipeline.try_wait_for_frames(timeout_ms=0)
+    if not success:
+        return
 
     depth_frame = frames.get_depth_frame()
-    other_frame = frames.first(other_stream)
-    color = frames.get_color_frame()
-    
+
     depth_frame = decimate.process(depth_frame)
 
     if state.postprocessing:
         for f in filters:
             depth_frame = f.process(depth_frame)
 
+    # Grab new intrinsics (may be changed by decimation)
+    depth_intrinsics = rs.video_stream_profile(
+        depth_frame.profile).get_intrinsics()
+    w, h = depth_intrinsics.width, depth_intrinsics.height
+
     points = pc.calculate(depth_frame)
 
-    pc.map_to(other_frame)
+    verts = np.array(points.get_vertices(2))
+    """processes = []
+    starttime = time.time()
+    for i in verts:
+        p = multiprocessing.Process(target=recup_data_cam, args=(i,))
+        processes.append(p)
+        p.start()
 
-    ply = name + ".ply"
-    pcd = name + ".pcd"
-    points.export_to_ply(ply, color)
-    clouding = pcl.load(ply)
-    pcl.save(clouding, pcd)
-    print("Export Reussi")
-    
+    for process in processes:
+        process.join()"""
+    starttime = time.time()
+    pool = multiprocessing.Pool(12)
+    image3d = pool.map(recup_data_cam, verts)
+    pool.close()
+
+    """for i in verts:
+        for j in i:
+            if 0.5 > j[0] > -0.5:
+                if 0.5 > j[1] > -0.5:
+                    if 0.5 > j[2] > -0.5:
+                        taille = taille + 1"""
+    print('That took {} seconds'.format(time.time() - starttime))
+
+    starttime = time.time()
+    image3d = sup_occurence(image3d)
+    print('That took {} seconds'.format(time.time() - starttime))
+    print(image3d)
+
+
+    """for i in image3d:
+        print("ici")
+        for j in i:
+            print(j)
+            pass"""
+    ttt = input("wait")
+
+
 calibration = 0
-    
+
+
 def modele_creation(fichier_source):
     angle_radian = math.radians(angle_degree)
 
-    transZ = np.array(  [[0]  ,
-                        [0]  ,
-                        [calibration]]  )
+    transZ = np.array([[0],
+                       [0],
+                       [calibration]])
 
-    rotZ = np.array(   [[math.cos(angle_radian),    0, math.sin(angle_radian)],
-                        [0                     ,    1, 0                     ],
-                        [-(math.sin(angle_radian)), 0, math.cos(angle_radian)]]  )
-    
+    rotZ = np.array([[math.cos(angle_radian), 0, math.sin(angle_radian)],
+                     [0, 1, 0],
+                     [-(math.sin(angle_radian)), 0, math.cos(angle_radian)]])
+
     taille = len(modele)
 
-    i=0
-    
+    i = 0
+
     while i < taille:
-        contenu_line_tmp = [0,0,0]
+        contenu_line_tmp = [0, 0, 0]
         test = ''
-        
+
         test = modele[i]
-        
+
         pointsf = np.dot(x, test)
-        
+
         modele[i] = pointsf
-        
+
         i = i + 1
 
     mon_fichier = open(fichier_source, "r")
     contenu = mon_fichier.readlines()
     mon_fichier.close()
-    
+
     taille = len(contenu)
 
-    i=11
+    i = 11
     while i < taille:
-        contenu_line_tmp = [0,0,0]
+        contenu_line_tmp = [0, 0, 0]
         test = ''
-        
+
         test = contenu[i]
-        test = test.replace('\n','')
+        test = test.replace('\n', '')
         contenu_line_tmp = test.split(" ")
-        
+
         points = np.array([[float(contenu_line_tmp[0])],
-                        [float(contenu_line_tmp[1])],
-                        [float(contenu_line_tmp[2])]])
-        if(points[2] > -0.4  and points[2] < -0.35 and points[0] > -0.15 and points[0] < 0.15):
-            test_point = calibration * math.tan(math.radians(3.6/10))
-            if (points[0] < test_point and points[0] > -test_point):
-                
+                           [float(contenu_line_tmp[1])],
+                           [float(contenu_line_tmp[2])]])
+        if points[2] > -0.4 and points[2] < -0.35 and points[0] > -0.15 and points[0] < 0.15:
+            test_point = calibration * math.tan(math.radians(3.6 / 10))
+            if points[0] < test_point and points[0] > -test_point:
                 pointsf = transZ + points
-                
+
                 modele.append(pointsf)
-        
+
         i = i + 1
-        
+
+
 def creation_pcd(nom_pcd):
-    i=0 
-    
+    i = 0
+
     taille = len(modele)
 
     file = open("test_pcd.pcd", "w")
@@ -435,40 +524,40 @@ def creation_pcd(nom_pcd):
     while i < taille:
         points = modele[i]
         mot1 = str(points[0])
-        mot1 = mot1.replace('[','')
-        mot1 = mot1.replace(']','')
-        
+        mot1 = mot1.replace('[', '')
+        mot1 = mot1.replace(']', '')
+
         mot2 = str(points[1])
-        mot2 = mot2.replace('[','')
-        mot2 = mot2.replace(']','')
-        
+        mot2 = mot2.replace('[', '')
+        mot2 = mot2.replace(']', '')
+
         mot3 = str(points[2])
-        mot3 = mot3.replace('[','')
-        mot3 = mot3.replace(']','')
-        
-        
+        mot3 = mot3.replace('[', '')
+        mot3 = mot3.replace(']', '')
+
         if i != (taille - 1):
             mot = mot1 + ' ' + mot2 + ' ' + mot3 + '\n'
         else:
             mot = mot1 + ' ' + mot2 + ' ' + mot3
-            
+
         file.write(mot)
         i = i + 1
 
     file.close()
-    
+
 
 def capture(nom2):
-    i=0
+    i = 0
     out = 0
     while i < 100:
         print("")
-        nom3 = nom2+("%d" % i)
+        nom3 = nom2 + ("%d" % i)
         capture_RealSense(nom3)
-        i = i+1
+        i = i + 1
         data = 55
         ser.write([data])
         out = ser.read()
+
 
 if __name__ == "__main__":
     while True:
@@ -481,22 +570,23 @@ if __name__ == "__main__":
         print("6- Conversion du fichier 3D")
         print("7- Quitter")
         choice = input("Faites votre choix: ")
-        if choice == 1:
+        if choice == '1':
             print("La touche Q permet de quitter l'application de visualisation")
             print("La touche R permet une remise a zero de la visualisation")
             print("La touche P permet de mettre en pause l'application de visualisation")
             print("La touche F permet d'activer ou de desactive le post-prcessing")
             print("La touche D permet de reduire la qualite de prise de la camera")
             pyglet.app.run()
-        if choice == 2:
+        if choice == '2':
             print("Veuillez donner les distances en mm s'il vous plait")
             distance_cam_plat = input("Distance entre la camera et le centre de la plateforme : ")
             hauteur_cible = input("Hauteur de la cible : ")
             hauteur_camera = input("Hauteur de la camera : ")
-        if choice == 3:
-            nom = raw_input("Nom du fichier de sortie: ")
-            capture(nom)
-        if choice == 4:
+        if choice == '3':
+            """nom = input("Nom du fichier de sortie: ")
+            capture(nom)"""
+            capture_RealSense("tt")
+        if choice == '4':
             j = 0
             fichier_source = ''
             while j < 100:
@@ -506,26 +596,23 @@ if __name__ == "__main__":
                 print(j)
             nom_pcd = nom + ".pcd"
             creation_pcd(nom_pcd)
-        if choice == 5:
+        if choice == '5':
             pcd = read_point_cloud(nom_pcd)
             draw_geometries([pcd])
-        if choice == 6:
+        if choice == '6':
             print("Vous pouvez convertir votre fichier en:")
             print("obj")
             print("stl")
             print("ply")
             print("pcd")
             print("vtk")
-            format_convert = raw_input("Format choisie: ")
-            
-            cmd = ('./pcl_converter ' + nom + '.pcd ' + 
+            format_convert = input("Format choisie: ")
+
+            cmd = ('./pcl_converter ' + nom + '.pcd ' +
                    nom + '.' + format_convert)
             os.popen(cmd)
-            
-        if choice == 5:
-            pcd = read_point_cloud(nom_pcd)
-            draw_geometries([pcd])
-        if choice == 7:
+
+        if choice == '7':
             os.remove('test_0.pcd')
             sys.exit(0)
         clear()

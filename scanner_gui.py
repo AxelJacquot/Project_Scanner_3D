@@ -11,10 +11,24 @@ import math
 from open3d import *
 import serial
 from serial.tools.list_ports import comports
+import bimpy
+
+vtk = bimpy.Bool(False)
+stl = bimpy.Bool(False)
+obj = bimpy.Bool(False)
+ply = bimpy.Bool(False)
+pcd = bimpy.Bool(False)
+stri = bimpy.String()
+ctx = bimpy.Context()
+taille_cible = bimpy.Int(150)
+largeur_cible = bimpy.Int(150)
+ctx.init(800, 400, "Scanner 3D")
+with ctx:
+    bimpy.themes.set_light_theme()
 
 modele = []
 angle_degree = 3.6
-calibration = 0
+calibration = 0.345
 
 def clear():
     print("\033c")
@@ -363,7 +377,7 @@ def modele_creation(fichier_source):
                         [0]  ,
                         [calibration]]  )
 
-    rotZ = np.array(   [[math.cos(angle_radian),    0, math.sin(angle_radian)],
+    rotY = np.array(   [[math.cos(angle_radian),    0, math.sin(angle_radian)],
                         [0                     ,    1, 0                     ],
                         [-(math.sin(angle_radian)), 0, math.cos(angle_radian)]]  )
     
@@ -377,7 +391,7 @@ def modele_creation(fichier_source):
         
         test = modele[i]
         
-        pointsf = np.dot(x, test)
+        pointsf = np.dot(rotY, test)
         
         modele[i] = pointsf
         
@@ -401,7 +415,7 @@ def modele_creation(fichier_source):
         points = np.array([[float(contenu_line_tmp[0])],
                         [float(contenu_line_tmp[1])],
                         [float(contenu_line_tmp[2])]])
-        if(points[2] > -0.4  and points[2] < -0.35 and points[0] > -0.15 and points[0] < 0.15):
+        if(points[1] < 0.1 and points[1] > -0.07 and points[2] > -0.5  and points[2] < -0.2 and points[0] > -0.15 and points[0] < 0.15):
             test_point = calibration * math.tan(math.radians(3.6/10))
             if (points[0] < test_point and points[0] > -test_point):
                 
@@ -416,11 +430,11 @@ def creation_pcd(nom_pcd):
     
     taille = len(modele)
 
-    file = open("test_pcd.pcd", "w")
+    file = open(nom_pcd, "w")
     file.write("")
     file.close()
 
-    file = open("test_pcd.pcd", "a")
+    file = open(nom_pcd, "a")
     mot = ("# .PCD v0.7 - Point Cloud Data file format \n" +
            "FIELDS x y z\n" +
            "SIZE 4 4 4\n" +
@@ -469,63 +483,119 @@ def capture(nom2):
         data = 55
         ser.write([data])
         out = ser.read()
+        
+while not ctx.should_close():
+    ctx.new_frame()
 
-if __name__ == "__main__":
-    while True:
-        print("Menu des choix:")
-        print("1- Visualisation")
-        print("2- Calibration")
-        print("3- Capture")
-        print("4- Fabrication du modele complet")
-        print("5- Visualisation du modele final")
-        print("6- Conversion du fichier 3D")
-        print("7- Quitter")
-        choice = input("Faites votre choix: ")
-        if choice == 1:
-            print("La touche Q permet de quitter l'application de visualisation")
-            print("La touche R permet une remise a zero de la visualisation")
-            print("La touche P permet de mettre en pause l'application de visualisation")
-            print("La touche F permet d'activer ou de desactive le post-prcessing")
-            print("La touche D permet de reduire la qualite de prise de la camera")
-            pyglet.app.run()
-        if choice == 2:
-            print("Veuillez donner les distances en mm s'il vous plait")
-            distance_cam_plat = input("Distance entre la camera et le centre de la plateforme : ")
-            hauteur_cible = input("Hauteur de la cible : ")
-            hauteur_camera = input("Hauteur de la camera : ")
-        if choice == 3:
-            nom = raw_input("Nom du fichier de sortie: ")
-            capture(nom)
-        if choice == 4:
-            j = 0
-            fichier_source = ''
-            while j < 100:
-                fichier_source = nom + str(j) + ".pcd"
-                modele_creation(fichier_source)
-                j = j + 1
-                print(j)
-            nom_pcd = nom + ".pcd"
-            creation_pcd(nom_pcd)
-        if choice == 5:
-            pcd = read_point_cloud(nom_pcd)
-            draw_geometries([pcd])
-        if choice == 6:
-            print("Vous pouvez convertir votre fichier en:")
-            print("obj")
-            print("stl")
-            print("ply")
-            print("pcd")
-            print("vtk")
-            format_convert = raw_input("Format choisie: ")
+    bimpy.set_next_window_pos(bimpy.Vec2(0, 0), bimpy.Condition.Once)
+    bimpy.set_next_window_size(bimpy.Vec2(800, 400), bimpy.Condition.Once)
+    bimpy.begin("Controls")
+
+    bimpy.input_int("Hauteur de la cible en mm", taille_cible)
+    
+    bimpy.input_int("Largeur de la cible en mm", largeur_cible)
+    
+    bimpy.input_text("Nom du fichier", stri, 15)
+
+    if bimpy.button("Visualisation"):
+        print("La touche Q permet de quitter l'application de visualisation")
+        print("La touche R permet une remise a zero de la visualisation")
+        print("La touche P permet de mettre en pause l'application de visualisation")
+        print("La touche F permet d'activer ou de desactive le post-prcessing")
+        print("La touche D permet de reduire la qualite de prise de la camera")
+        pyglet.app.run()
+        
+    if bimpy.button("Debut du Scan"):
+        nom = str(stri.value)
+        capture(nom)
+    if bimpy.button("Visualisation du resultat"):
+        nom = str(stri.value)
+        j = 0
+        fichier_source = ''
+        while j < 100:
+            fichier_source = nom + str(j) + ".pcd"
+            modele_creation(fichier_source)
+            print(j)
+            j = j + 1
+        my_file = open("test.pcd", "w")
+        my_file.write("")
+        my_file.close()
+        my_file = open("test.pcd", "a")
+        i = 0
+        taille = len(modele)
+        mot = ("# .PCD v0.7 - Point Cloud Data file format \n" +
+                "FIELDS x y z\n" +
+                "SIZE 4 4 4\n" +
+                "TYPE F F F\n" +
+                "COUNT 1 1 1\n" +
+                "WIDTH " + str(taille) + "\n" +
+                "HEIGHT 1\n" +
+                "VIEWPOINT 0 0 0 1 0 0 0\n" +
+                "POINTS " + str(taille) + "\n" +
+                "DATA ascii\n")
+        my_file.write(mot)
+
+        while i < taille:
+            pointsf = modele[i]
+            mot1 = str(pointsf[0])
+            mot1 = mot1.replace('[','')
+            mot1 = mot1.replace(']','')
             
-            cmd = ('./pcl_converter ' + nom + '.pcd ' + 
-                   nom + '.' + format_convert)
+            mot2 = str(pointsf[1])
+            mot2 = mot2.replace('[','')
+            mot2 = mot2.replace(']','')
+            
+            mot3 = str(pointsf[2])
+            mot3 = mot3.replace('[','')
+            mot3 = mot3.replace(']','')
+            
+            
+            if i != (taille - 1):
+                mot = mot1 + ' ' + mot2 + ' ' + mot3 + '\n'
+            else:
+                mot = mot1 + ' ' + mot2 + ' ' + mot3
+                
+            my_file.write(mot)
+            
+            i = i + 1
+        my_file.close()
+        pcd_create = read_point_cloud("test.pcd")
+        draw_geometries([pcd_create])
+        
+    bimpy.text("Choix des formats de sortie")
+    
+    bimpy.checkbox("VTK",vtk)
+    
+    bimpy.checkbox("STL",stl)
+    
+    bimpy.checkbox("OBJ",obj)
+
+    bimpy.checkbox("PLY",ply)
+    
+    bimpy.checkbox("PCD",pcd)
+    
+    if bimpy.button("Conversion du fichier"):
+        nom = str(stri.value)
+        if vtk.value == True:
+            cmd = ('./pcl_converter ' + "test.pcd" + 
+                   nom + '.vtk')
             os.popen(cmd)
-            
-        if choice == 5:
-            pcd = read_point_cloud(nom_pcd)
-            draw_geometries([pcd])
-        if choice == 7:
-            os.remove('test_0.pcd')
-            sys.exit(0)
-        clear()
+        if stl.value == True:
+            cmd = ('./pcl_converter ' + "test.pcd" + 
+                   nom + '.stl')
+            os.popen(cmd)
+        if obj.value == True:
+            cmd = ('./pcl_converter ' + "test.pcd" + 
+                   nom + '.obj')
+            os.popen(cmd)
+        if ply.value == True:
+            cmd = ('./pcl_converter ' + "test.pcd" + 
+                   nom + '.ply')
+            os.popen(cmd)
+        
+    if bimpy.button("Fermer l'application"):
+        sys.exit(0)
+
+    bimpy.end()
+
+    ctx.render()
