@@ -71,9 +71,6 @@ def recup_data_cam(j):
                                      [j[2]]]))
     return np.array([0,0,0])
 
-def rotation():
-    pass
-
 def sup_occurence(lst):
     new_list = []
     for i in lst:
@@ -299,7 +296,7 @@ def on_draw():
     gl.glLoadIdentity()
     gl.glDisable(gl.GL_DEPTH_TEST)
 
-    # fps_display.draw()
+     #fps_display.draw()
 
 
 def run(dt):
@@ -318,7 +315,6 @@ def run(dt):
 
     depth_frame = frames.get_depth_frame()
     other_frame = frames.first(other_stream)
-    color = frames.get_color_frame()
 
     depth_frame = decimate.process(depth_frame)
 
@@ -583,8 +579,8 @@ if __name__ == "__main__":
             hauteur_cible = input("Hauteur de la cible : ")
             hauteur_camera = input("Hauteur de la camera : ")
         if choice == '3':
-            """nom = input("Nom du fichier de sortie: ")
-            capture(nom)"""
+            nom = input("Nom du fichier de sortie: ")
+            capture(nom)
             capture_RealSense("tt")
         if choice == '4':
             j = 0

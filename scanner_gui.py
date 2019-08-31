@@ -34,7 +34,7 @@ def clear():
     print("\033c")
     
 clear()
-
+"""
 def ask_for_port():
     for n, (port, desc, hwid) in enumerate(sorted(comports()), 1):
         if desc == "FT232R USB UART":
@@ -52,12 +52,14 @@ def ports():
         else:
             return port
     print("FERMETURE DU PROGRAMME")
-    sys.exit(0)
-    
+    sys.exit(0)"""
+
+"""   
 ser = serial.Serial()
 ser.baudrate = 115200
 ser.port = ports()
 ser.open()
+"""
 
 class AppState:
     def __init__(self, *args, **kwargs):

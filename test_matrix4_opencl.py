@@ -4,9 +4,6 @@ import numpy as np
 from time import time
 from math import pi
 
-starttime = time()
-
-
 ctx = cl.create_some_context(None,[0])
 queue = cl.CommandQueue(ctx)
 
@@ -64,9 +61,8 @@ angle_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(ang
 
 def capture():
 
-
     for i in range(0,100):
-        a = np.random.rand(999999).astype(np.float32).reshape(333333,3)
+        a = np.random.rand(9999999).astype(np.float32).reshape(3333333,3)
 
         a_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=a)
 
@@ -102,7 +98,10 @@ def capture():
 
 
     return c, res_np,x_np,y_np
+
+
 if __name__ == '__main__':
+    starttime = time()
     nn,z,x,y = capture()
     print(time() - starttime)
     print(nn)

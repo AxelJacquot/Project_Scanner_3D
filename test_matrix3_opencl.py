@@ -76,6 +76,8 @@ cl.enqueue_copy(queue, tr_np, tr_g)
 
 a = tr_np[~np.all(tr_np == 0., axis=1)]         #delete all occurence of [0 0 0]
 
+mf.READ_WRITE
+
 a_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=a)
 res_g = cl.Buffer(ctx, mf.WRITE_ONLY, a.nbytes)
 x_g = cl.Buffer(ctx, mf.WRITE_ONLY, a.nbytes)
