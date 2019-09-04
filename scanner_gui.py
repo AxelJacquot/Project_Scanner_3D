@@ -370,8 +370,6 @@ def capture_RealSense(name):
     pcl.save(clouding, pcd)
     print("Export Reussi")
     
-calibration = 0
-    
 def modele_creation(fichier_source):
     angle_radian = math.radians(angle_degree)
 

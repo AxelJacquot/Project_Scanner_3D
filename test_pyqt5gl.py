@@ -9,7 +9,7 @@ from PyQt5.QtGui import QColor, QValidator
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QOpenGLWidget, QSlider, QPushButton, QCheckBox, QLabel,
                              QMenu, QMenuBar, QComboBox, QVBoxLayout, QMessageBox, QWidget, QSpinBox, QLineEdit,
-                             QStackedWidget, QFormLayout, QDesktopWidget, QFileDialog,)
+                             QStackedWidget, QFormLayout, QDesktopWidget, QFileDialog, )
 
 import OpenGL.GL as gl
 
@@ -52,28 +52,28 @@ queue = cl.CommandQueue(ctx)
 mf = cl.mem_flags
 
 prg = cl.Program(ctx, """
-    __kernel void traitement(__global const float *point, __global float *point_prime)
+    __kernel void traitement(__global const float *point, __global float *trans_x, __global float *trans_y,
+    __global float * trans_z, __global float *point_prime)
     {
         int test_traitement = 0;
         int i = (get_global_id(0) * 2) + get_global_id(0);
         if(point[i] < 0.5 && point[i] > -0.5){
             if(point[i+1] < 0.5 && point[i+1] > -0.5){
-                if(point[i+2] < 0.5 && point[i+2] > -0.5){
-                    point_prime[i] = point[i];
-                    point_prime[i+1] = point[i+1];
-                    point_prime[i+2] = point[i+2];
+                if(point[i+2] > -0.5){
+                    point_prime[i] = point[i] + *A              trans_x;
+                    point_prime[i+1] = point[i+1] + *trans_y;
+                    point_prime[i+2] = point[i+2] + *trans_z;
                 }
             }
         }
     }
     
-    __kernel void rot_x(__global const float *point, __global float *angle, __global float *point_prime)
+    __kernel void rot_x(__global const float *point, __global float *angle_x, __global float *point_prime)
     {
-        float angle_x = *angle;
         int i = (get_global_id(0) * 2) + get_global_id(0);
         point_prime[i] = point[i];
-        point_prime[i+1] = cos(angle_x) * point[i+1] + sin(angle_x) * point[i+2];
-        point_prime[i+2] = cos(angle_x) * point[i+2] - sin(angle_x) * point[i+1];
+        point_prime[i+1] = cos(*angle_x) * point[i+1] + sin(*angle_x) * point[i+2];
+        point_prime[i+2] = cos(*angle_x) * point[i+2] - sin(*angle_x) * point[i+1];
     }
 
     __kernel void rot_y(__global const float *point, __global float *angle, __global float *point_prime)
@@ -101,7 +101,7 @@ class Window(QWidget):
     def __init__(self):
         super(Window, self).__init__()
 
-        self.timer = QTimer(self)       #set timer to execute different action
+        self.timer = QTimer(self)  # set timer to execute different action
 
         # self.rs.init_profile_realsense()
 
@@ -268,18 +268,21 @@ class Window(QWidget):
     def choose_view(self, i):
         self.stacked.setCurrentIndex(i)
 
+    def choose_mode(self, i):
+        pass
+
 
 class RealSense(QWidget):
-
-    signal_model = pyqtSignal(object)         #signal_camera
+    signal_model = pyqtSignal(object)  # signal_camera
     signal_camera = pyqtSignal(object, object)
 
     def __init__(self, width=1280, height=720):
         super(RealSense, self).__init__()
         self.counterstep = 0
+        self.angle = 25 * pi / 180
 
-        self.pt = np.array(2)
-        #self.portt = self.ports()
+        self.verts = np.array([[0, 0, 0]])
+        # self.portt = self.ports()
         self.init_realsense(width, height)
 
     def init_realsense(self, width, height):
@@ -309,10 +312,9 @@ class RealSense(QWidget):
         self.decimate.set_option(rs.option.filter_magnitude, 2 ** 0)
         self.colorizer = rs.colorizer()
         self.filters = [rs.disparity_transform(),
-                   rs.spatial_filter(),
-                   rs.temporal_filter(),
-                   rs.disparity_transform(False)]
-
+                        rs.spatial_filter(),
+                        rs.temporal_filter(),
+                        rs.disparity_transform(False)]
 
     def ask_for_port(self):
         for n, (port, desc, hwid) in enumerate(sorted(comports()), 1):
@@ -397,29 +399,60 @@ class RealSense(QWidget):
     def recovery_data_model(self):
         points = rs.points()
 
-        success, frames = self.pipeline.try_wait_for_frames(timeout_ms=0)       #récupération des images
+        success, frames = self.pipeline.try_wait_for_frames(timeout_ms=0)  # récupération des images
         if not success:
             return
 
-        depth_frame = frames.get_depth_frame()  #récupération de l'image de la profondeur
+        depth_frame = frames.get_depth_frame()  # récupération de l'image de la profondeur
 
         depth_frame = self.decimate.process(depth_frame)
 
-        for f in self.filters:          #application des différents filtres
+        for f in self.filters:  # application des différents filtres
             depth_frame = f.process(depth_frame)
 
-        points = self.pc.calculate(depth_frame)     #calcul des points
+        points = self.pc.calculate(depth_frame)  # calcul des points
 
-        self.pt = np.array(points.get_vertices(2))      #restructuration de la donnée dans des vecteurs n*3
+        vert = np.array(points.get_vertices(2))  # restructuration de la donnée dans des vecteurs n*3
 
-        self.signal_model.emit(self.pt)
+        self.construct_model(vert)
 
-    def construct_model(self):
-        pass
+        # self.signal_model.emit(vert)
+
+    def construct_model(self, vert):
+        ymax = np.max(vert[:, 1])
+        print(ymax)
+        angle_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle))
+        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=vert)
+
+        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, vert.nbytes)
+
+        prg.traitement(queue, vert.shape, None, vert_g, tr_g)
+
+        tr_np = np.empty_like(vert)
+
+        cl.enqueue_copy(queue, tr_np, tr_g)
+
+        vert = tr_np[~np.all(tr_np == 0., axis=1)]
+
+        if self.counterstep != 0:
+            self.verts = np.append(self.verts, vert, axis=0)
+        else:
+            self.verts = vert
+
+        verts_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.verts)
+        res_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
+        x_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
+        y_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
+        prg.rot_y(queue, self.verts.shape, None, verts_g, angle_g, res_g)
+
+        cl.enqueue_copy(queue, self.verts, res_g)
+
+        self.counterstep = self.counterstep + 1
+
+        self.signal_model.emit(self.verts)
 
 
 class GLWidget_Model(QOpenGLWidget):
-
 
     def __init__(self):
 
@@ -447,7 +480,7 @@ class GLWidget_Model(QOpenGLWidget):
 
         glPointSize(1)
 
-        #rotate 3D model
+        # rotate 3D model
         glRotated(self.xRot, 1.0, 0.0, 0.0)
         glRotated(self.yRot, 0.0, 1.0, 0.0)
         glRotated(self.zRot, 0.0, 0.0, 1.0)
@@ -486,11 +519,11 @@ class GLWidget_Model(QOpenGLWidget):
         dy = event.y() - self.lastPos.y()
 
         if event.buttons() & Qt.LeftButton:
-            self.setXRotation(self.xRot +  dy)
-            self.setYRotation(self.yRot +  dx)
+            self.setXRotation(self.xRot + dy)
+            self.setYRotation(self.yRot + dx)
         elif event.buttons() & Qt.RightButton:
-            self.setXRotation(self.xRot +  dy)
-            self.setZRotation(self.zRot +  dx)
+            self.setXRotation(self.xRot + dy)
+            self.setZRotation(self.zRot + dx)
 
     def normalizeAngle(self, angle):
         while angle < 0:
@@ -499,8 +532,8 @@ class GLWidget_Model(QOpenGLWidget):
             angle -= 360
         return angle
 
-class GLWidget_Camera(QOpenGLWidget):
 
+class GLWidget_Camera(QOpenGLWidget):
 
     def __init__(self):
 
@@ -518,6 +551,7 @@ class GLWidget_Camera(QOpenGLWidget):
         self.vert = vert
         self.texture = texture
         self.update()
+
     def paintGL(self):
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
@@ -530,7 +564,6 @@ class GLWidget_Camera(QOpenGLWidget):
         glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0)
         glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
         glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
-
 
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
@@ -583,7 +616,6 @@ class GLWidget_Camera(QOpenGLWidget):
 
 
 class GLWidget(QOpenGLWidget):
-
 
     def __init__(self, parent=None):
         super(GLWidget, self).__init__(parent)

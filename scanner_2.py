@@ -437,10 +437,6 @@ def capture_RealSense(name):
             pass"""
     ttt = input("wait")
 
-
-calibration = 0
-
-
 def modele_creation(fichier_source):
     angle_radian = math.radians(angle_degree)
 
