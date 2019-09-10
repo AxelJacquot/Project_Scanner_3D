@@ -9,7 +9,7 @@ from PyQt5.QtGui import QColor, QValidator
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QOpenGLWidget, QSlider, QPushButton, QCheckBox, QLabel,
                              QMenu, QMenuBar, QComboBox, QVBoxLayout, QMessageBox, QWidget, QSpinBox, QLineEdit,
-                             QStackedWidget, QFormLayout, QDesktopWidget, QFileDialog, )
+                             QStackedWidget, QFormLayout, QDesktopWidget, QFileDialog, QDoubleSpinBox, QProgressBar)
 
 import OpenGL.GL as gl
 
@@ -52,15 +52,18 @@ queue = cl.CommandQueue(ctx)
 mf = cl.mem_flags
 
 prg = cl.Program(ctx, """
-    __kernel void traitement(__global const float *point, __global float *trans_x, __global float *trans_y,
-    __global float * trans_z, __global float *point_prime)
+    __kernel void treatment_mobile(__global const float *point, __global float *trans_x, __global float *trans_y, 
+    __global float *trans_z, __global float *lim_x, __global float *lim_y, __global float *lim_z,
+    __global float *point_prime)
     {
-        int test_traitement = 0;
+        float limit_x = *lim_x;
+        float limit_y = *lim_y;
+        float limit_z = *lim_z;
         int i = (get_global_id(0) * 2) + get_global_id(0);
-        if(point[i] < 0.5 && point[i] > -0.5){
-            if(point[i+1] < 0.5 && point[i+1] > -0.5){
-                if(point[i+2] > -0.5){
-                    point_prime[i] = point[i] + *A              trans_x;
+        if(point[i] < limit_x && point[i] > -(limit_x)){
+            if(point[i+1] < (limit_y) && point[i+1] > -(limit_y)){
+                if(point[i+2] > -(limit_z)){
+                    point_prime[i] = point[i] + *trans_x;
                     point_prime[i+1] = point[i+1] + *trans_y;
                     point_prime[i+2] = point[i+2] + *trans_z;
                 }
@@ -68,12 +71,49 @@ prg = cl.Program(ctx, """
         }
     }
     
-    __kernel void rot_x(__global const float *point, __global float *angle_x, __global float *point_prime)
+    __kernel void treatment_platform(__global const float *point, __global float *trans_z, __global float *lim_x,
+     __global float *lim_y, __global float *lim_z, __global float *point_prime)
     {
+        float limit_x = *lim_x;
+        float limit_y = *lim_y;
+        float limit_z = *lim_z;
+        int i = (get_global_id(0) * 2) + get_global_id(0);
+        if(point[i] < limit_x && point[i] > -(limit_x)){
+            if(point[i+1] < (limit_y) && point[i+1] > -(limit_y)){
+                if(point[i+2] > -(limit_z)){
+                    point_prime[i] = point[i];
+                    point_prime[i+1] = point[i+1];
+                    point_prime[i+2] = point[i+2] + *trans_z;
+                }
+            }
+        }
+    }
+    
+    __kernel void treatment_test(__global const float *point, __global float *lim_x,
+     __global float *lim_y, __global float *lim_z, __global float *point_prime)
+    {
+        float limit_x = *lim_x;
+        float limit_y = *lim_y;
+        float limit_z = *lim_z;
+        int i = (get_global_id(0) * 2) + get_global_id(0);
+        if(point[i] < limit_x && point[i] > -(limit_x)){
+            if(point[i+1] < (limit_y) && point[i+1] > -(limit_y)){
+                if(point[i+2] > -(limit_z)){
+                    point_prime[i] = point[i];
+                    point_prime[i+1] = point[i+1];
+                    point_prime[i+2] = point[i+2];
+                }
+            }
+        }
+    }
+    
+    __kernel void rot_x(__global const float *point, __global float *angle, __global float *point_prime)
+    {
+        float angle_x = *angle;
         int i = (get_global_id(0) * 2) + get_global_id(0);
         point_prime[i] = point[i];
-        point_prime[i+1] = cos(*angle_x) * point[i+1] + sin(*angle_x) * point[i+2];
-        point_prime[i+2] = cos(*angle_x) * point[i+2] - sin(*angle_x) * point[i+1];
+        point_prime[i+1] = cos(angle_x) * point[i+1] + sin(angle_x) * point[i+2];
+        point_prime[i+2] = cos(angle_x) * point[i+2] - sin(angle_x) * point[i+1];
     }
 
     __kernel void rot_y(__global const float *point, __global float *angle, __global float *point_prime)
@@ -101,6 +141,12 @@ class Window(QWidget):
     def __init__(self):
         super(Window, self).__init__()
 
+        self.connect_rs = False
+
+        self.rs = RealSense()
+        self.platform = Platform()
+
+
         self.timer = QTimer(self)  # set timer to execute different action
 
         # self.rs.init_profile_realsense()
@@ -121,6 +167,17 @@ class Window(QWidget):
 
         self.list_resolution.setMaximumWidth(150)
 
+        self.list_resolution.currentIndexChanged.connect(self.choose_resolution)
+
+        self.list_mode = QComboBox()
+        self.list_mode.insertItem(0, 'Plateforme')
+        self.list_mode.insertItem(1, 'Mobile')
+        self.list_mode.insertItem(2, 'Test Réglage')
+
+        self.list_mode.setMaximumWidth(150)
+
+        self.list_mode.currentIndexChanged.connect(self.choose_mode)
+
         self.glWidget = GLWidget()
         self.glWidget_Model = GLWidget_Model()
         self.glWidget_Camera = GLWidget_Camera()
@@ -138,25 +195,15 @@ class Window(QWidget):
         self.filename.setMaxLength(10)
         self.filename.setMaximumWidth(150)
 
-        self.start_stream = QPushButton("Lancement du stream", self)
-        self.start_stream.setMaximumWidth(150)
-        self.start_stream.clicked.connect(self.click_stream)
-
-        self.start_scan = QPushButton("Lancement du scan", self)
-        self.start_scan.setMaximumWidth(150)
-        self.start_scan.clicked.connect(self.click_scan)
-
         self.quit_button = QPushButton("Quitter", self)
         self.quit_button.setMaximumWidth(150)
         self.quit_button.clicked.connect(self.close)
 
-        self.rs_button = QPushButton("Connecter Caméra", self)
-        self.rs_button.setMaximumWidth(150)
-        self.rs_button.clicked.connect(self.init_rs)
-
         self.button_path = QPushButton("Chemin")
         self.button_path.setMaximumWidth(150)
         self.button_path.clicked.connect(self.recover_path)
+
+        """Initialisation de l'affichage 3D"""
 
         self.camera_view_widget = QWidget()
         self.model_view_widget = QWidget()
@@ -166,10 +213,128 @@ class Window(QWidget):
         self.layout_model_view()
         self.layout_camera_view()
 
-        self.stacked = QStackedWidget(self)
-        self.stacked.addWidget(self.Logo_Qt_widget)
-        self.stacked.addWidget(self.model_view_widget)
-        self.stacked.addWidget(self.camera_view_widget)
+        self.stacked_gl = QStackedWidget(self)
+        self.stacked_gl.addWidget(self.Logo_Qt_widget)
+        self.stacked_gl.addWidget(self.model_view_widget)
+        self.stacked_gl.addWidget(self.camera_view_widget)
+
+        """Initialisation de la gestion des modes"""
+
+        self.SPB_lim_x = QDoubleSpinBox()
+        self.SPB_lim_x.setRange(0, 2)
+        self.SPB_lim_x.setValue(0.5)
+        self.SPB_lim_x.setDecimals(5)
+        self.SPB_lim_x.valueChanged.connect(self.rs.set_lim_x)
+
+        self.SPB_lim_y = QDoubleSpinBox()
+        self.SPB_lim_y.setRange(0, 2)
+        self.SPB_lim_y.setValue(0.5)
+        self.SPB_lim_y.setDecimals(5)
+        self.SPB_lim_y.valueChanged.connect(self.rs.set_lim_y)
+
+        self.SPB_lim_z = QDoubleSpinBox()
+        self.SPB_lim_z.setRange(0, 2)
+        self.SPB_lim_z.setValue(0.5)
+        self.SPB_lim_z.setDecimals(5)
+        self.SPB_lim_z.valueChanged.connect(self.rs.set_lim_z)
+
+        self.SPB_lim_x2 = QDoubleSpinBox()
+        self.SPB_lim_x2.setRange(0, 2)
+        self.SPB_lim_x2.setValue(0.5)
+        self.SPB_lim_x2.setDecimals(5)
+        self.SPB_lim_x2.valueChanged.connect(self.rs.set_lim_x)
+
+        self.SPB_lim_y2 = QDoubleSpinBox()
+        self.SPB_lim_y2.setRange(0, 2)
+        self.SPB_lim_y2.setValue(0.5)
+        self.SPB_lim_y2.setDecimals(5)
+        self.SPB_lim_y2.valueChanged.connect(self.rs.set_lim_y)
+
+        self.SPB_lim_z2 = QDoubleSpinBox()
+        self.SPB_lim_z2.setRange(0, 2)
+        self.SPB_lim_z2.setValue(0.5)
+        self.SPB_lim_z2.setDecimals(5)
+        self.SPB_lim_z2.valueChanged.connect(self.rs.set_lim_z)
+
+        self.SPB_lim_x3 = QDoubleSpinBox()
+        self.SPB_lim_x3.setRange(0, 2)
+        self.SPB_lim_x3.setValue(0.5)
+        self.SPB_lim_x3.setDecimals(5)
+        self.SPB_lim_x3.valueChanged.connect(self.rs.set_lim_x)
+
+        self.SPB_lim_y3 = QDoubleSpinBox()
+        self.SPB_lim_y3.setRange(0, 2)
+        self.SPB_lim_y3.setValue(0.5)
+        self.SPB_lim_y3.setDecimals(5)
+        self.SPB_lim_y3.valueChanged.connect(self.rs.set_lim_y)
+
+        self.SPB_lim_z3 = QDoubleSpinBox()
+        self.SPB_lim_z3.setRange(0, 2)
+        self.SPB_lim_z3.setValue(0.5)
+        self.SPB_lim_z3.setDecimals(5)
+        self.SPB_lim_z3.valueChanged.connect(self.rs.set_lim_z)
+
+        self.SPB_dist_center = QDoubleSpinBox()
+        self.SPB_dist_center.setRange(0, 2)
+        self.SPB_dist_center.setValue(5)
+        self.SPB_dist_center.setDecimals(5)
+        self.SPB_dist_center.valueChanged.connect(self.rs.set_dist_center)
+
+        self.progress = QProgressBar()
+
+        self.SPB_angle = QDoubleSpinBox()
+        self.SPB_angle.setRange(0, 180)
+        self.SPB_angle.setValue(3)
+        self.SPB_angle.valueChanged.connect(self.rs.set_angle_y)
+
+        self.button_save = QPushButton("Sauvegarde du modèle")
+        self.button_save.setMaximumWidth(150)
+        self.button_save.clicked.connect(self.save_file)
+
+        self.button_save2 = QPushButton("Sauvegarde du modèle")
+        self.button_save2.setMaximumWidth(150)
+        self.button_save2.clicked.connect(self.save_file)
+
+        self.rs_button = QPushButton("Connecter Caméra", self)
+        self.rs_button.setMaximumWidth(150)
+        self.rs_button.clicked.connect(self.init_rs)
+
+        self.rs_button2 = QPushButton("Connecter Caméra", self)
+        self.rs_button2.setMaximumWidth(150)
+        self.rs_button2.clicked.connect(self.init_rs)
+
+        self.rs_button3 = QPushButton("Connecter Caméra", self)
+        self.rs_button3.setMaximumWidth(150)
+        self.rs_button3.clicked.connect(self.init_rs)
+
+        self.platform_button = QPushButton("Connecter Plateforme", self)
+        self.platform_button.setMaximumWidth(150)
+        self.platform_button.clicked.connect(self.init_platform)
+
+        self.start_scan = QPushButton("Lancement du scan", self)
+        self.start_scan.setMaximumWidth(150)
+        self.start_scan.clicked.connect(self.click_scan_platform)
+
+        self.start_scan2 = QPushButton("Lancement du scan", self)
+        self.start_scan2.setMaximumWidth(150)
+        self.start_scan2.clicked.connect(self.click_scan_mobile)
+
+        self.start_test = QPushButton("Lancement du test", self)
+        self.start_test.setMaximumWidth(150)
+        self.start_test.clicked.connect(self.click_scan_test)
+
+        self.mode_platform_widget = QWidget()
+        self.mode_mobile_widget = QWidget()
+        self.mode_test_widget = QWidget()
+
+        self.layout_mode_platform()
+        self.layout_mode_mobile()
+        self.layout_mode_test()
+
+        self.stacked_mode = QStackedWidget(self)
+        self.stacked_mode.addWidget(self.mode_platform_widget)
+        self.stacked_mode.addWidget(self.mode_mobile_widget)
+        self.stacked_mode.addWidget(self.mode_test_widget)
 
         fourLayout = QVBoxLayout()
         fourLayout.addWidget(self.xyz)
@@ -182,29 +347,77 @@ class Window(QWidget):
         secondLayout = QFormLayout()
         secondLayout.addRow("Choix de la visualisation", self.list_view)
         secondLayout.addRow("Choix de la résolution", self.list_resolution)
+        secondLayout.addRow("Choix du mode", self.list_mode)
         secondLayout.addRow("Nom des fichiers", self.filename)
         secondLayout.addRow("Choix des formats 3D", fourLayout)
         secondLayout.addRow("Récupération du chemin", self.button_path)
         secondLayout.setAlignment(Qt.AlignRight)
 
         buttonLayout = QHBoxLayout()
-        buttonLayout.addWidget(self.start_scan)
         buttonLayout.addWidget(self.quit_button)
 
         thirdLayout = QVBoxLayout()
         thirdLayout.addLayout(secondLayout)
-        thirdLayout.addWidget(self.rs_button)
-        thirdLayout.addWidget(self.start_stream)
-        thirdLayout.addLayout(buttonLayout)
+        thirdLayout.addWidget(self.stacked_mode)
+        thirdLayout.addWidget(self.quit_button)
         thirdLayout.setAlignment(Qt.AlignRight)
 
         self.mainLayout = QHBoxLayout()
-        self.mainLayout.addWidget(self.stacked)
+        self.mainLayout.addWidget(self.stacked_gl)
         self.mainLayout.addLayout(thirdLayout)
         self.setLayout(self.mainLayout)
 
         # self.showFullScreen()
         self.setWindowTitle("Scanner 3D")
+
+    def layout_mode_mobile(self):
+        layout = QVBoxLayout()
+        #layout.setGeometry(50, 50, 200, 200)
+        layout_lim = QFormLayout()
+        layout_lim.addRow("Limite X", self.SPB_lim_x2)
+        layout_lim.addRow("Limite Y", self.SPB_lim_y2)
+        layout_lim.addRow("Limite Z", self.SPB_lim_z2)
+        layout_button = QHBoxLayout()
+        layout_button.addWidget(self.rs_button2)
+        layout_button.addWidget(self.button_save2)
+        layout.addLayout(layout_lim)
+        layout.addLayout(layout_button)
+        layout.addWidget(self.start_scan)
+        self.mode_mobile_widget.setLayout(layout)
+
+    def layout_mode_platform(self):
+        layout = QVBoxLayout()
+        # layout.setGeometry(50, 50, 200, 200)
+        layout_lim = QFormLayout()
+        layout_lim.addRow("Limite X", self.SPB_lim_x)
+        layout_lim.addRow("Limite Y", self.SPB_lim_y)
+        layout_lim.addRow("Limite Z", self.SPB_lim_z)
+        layout_lim.addRow("Angle Rotation", self.SPB_angle)
+        layout_lim.addRow("Avancement", self.progress)
+        layout_button_1 = QHBoxLayout()
+        layout_button_1.addWidget(self.rs_button)
+        layout_button_1.addWidget(self.platform_button)
+        layout.addLayout(layout_lim)
+        layout.addLayout(layout_button_1)
+        layout_button_2 = QHBoxLayout()
+        layout_button_2.addWidget(self.start_scan2)
+        layout_button_2.addWidget(self.button_save)
+        layout.addLayout(layout_button_2)
+        self.mode_platform_widget.setLayout(layout)
+
+    def layout_mode_test(self):
+        layout = QVBoxLayout()
+        # layout.setGeometry(50, 50, 200, 200)
+        layout_lim = QFormLayout()
+        layout_lim.addRow("Limite X", self.SPB_lim_x3)
+        layout_lim.addRow("Limite Y", self.SPB_lim_y3)
+        layout_lim.addRow("Limite Z", self.SPB_lim_z3)
+        layout_button = QHBoxLayout()
+        layout_button.addWidget(self.rs_button3)
+        layout_button.addWidget(self.start_test)
+        layout.addLayout(layout_lim)
+        layout.addLayout(layout_button)
+        self.mode_test_widget.setLayout(layout)
 
     def layout_Logo_Qt(self):
         layout = QHBoxLayout()
@@ -222,30 +435,39 @@ class Window(QWidget):
         self.model_view_widget.setLayout(layout)
 
     def init_rs(self):
-        self.rs = RealSense()
+        try:
+            self.rs.init_realsense()
+            self.connect_rs = self.rs.connect
+
+        except:
+            QMessageBox.information(self, "Attention la caméra n'est pas connectée",
+                                    "Veuillez connecter une caméra RealSense pour utiliser ce logiciel",
+                                    QMessageBox.Ok, QMessageBox.Ok)
 
     def recover_path(self):
-        try:
-            dialog = QFileDialog()
-            filepath = dialog.getExistingDirectory(self, 'Récupération du chemin')
-
-            if filepath[0]:
-                print(filepath)
-        except:
-            print("error")
-            pass
-
-    def click_stream(self):
-        self.timer.timeout.connect(self.stream)
-        self.timer.start(10)
-
-    def click_scan(self):
-        self.timer.timeout.connect(self.scan)
-        self.timer.start(10)
+        dialog = QFileDialog()
+        self.filepath = dialog.getExistingDirectory(self, 'Récupération du chemin')
 
     def stream(self):
         self.rs.stream_camera()
-        self.rs.signal_camera.connect(self.glWidget_Camera.set_data)
+
+    def click_scan_platform(self):
+        self.choose_view(1)
+        self.rs.set_mode_platform()
+        self.timer.timeout.connect(self.scan)
+        self.timer.start(10)
+
+    def click_scan_mobile(self):
+        self.choose_view(1)
+        self.rs.set_mode_mobile()
+        self.timer.timeout.connect(self.scan)
+        self.timer.start(10)
+
+    def click_scan_test(self):
+        self.choose_view(1)
+        self.rs.set_mode_test()
+        self.timer.timeout.connect(self.scan)
+        self.timer.start(10)
 
     def scan(self):
         self.rs.recovery_data_model()
@@ -266,38 +488,132 @@ class Window(QWidget):
             event.ignore()
 
     def choose_view(self, i):
-        self.stacked.setCurrentIndex(i)
+        self.stacked_gl.setCurrentIndex(i)
+        if i == 2:
+            if self.connect_rs == True:
+                self.rs.signal_camera.connect(self.glWidget_Camera.set_data)
+                self.timer.timeout.connect(self.stream)
+                self.timer.start(10)
+            else:
+                QMessageBox.information(self, "Attention la caméra n'est pas connectée",
+                                        "Veuillez connecter une caméra RealSense pour utiliser la visualisation",
+                                        QMessageBox.Ok,
+                                        QMessageBox.Ok)
+
+    def choose_resolution(self, i):
+        if i == 0:
+            self.rs.set_resolution(1280, 720)
+        elif i == 1:
+            self.rs.set_resolution(853, 480)
+        else:
+            self.rs.set_resolution(640, 360)
+
+        if self.connect_rs == True:
+            self.timer.stop()
+            self.rs.profile_stop()
+            self.rs.init_realsense()
+            self.timer.start(10)
+        pass
 
     def choose_mode(self, i):
+        self.stacked_mode.setCurrentIndex(i)
+
+    def save_file(self):                            ##A FINIR
+        self.name = self.filename.displayText()
+        if self.name[0] and self.filepath[0]:
+            if(self.xyz.isChecked()):
+                pass
+            if(self.pcd.isChecked()):
+                pass
+            if(self.obj.isChecked()):
+                pass
+            if(self.ply.isChecked()):
+                pass
+            if(self.stl.isChecked()):
+                pass
+            if(self.vtk.isChecked()):
+                pass
+
+    def init_platform(self):
+        self.port = self.platform.ports()
+
+
+class Platform(QWidget):
+
+
+    def __init__(self):
+        self.port = 0
+
+    def ask_for_port(self):
+        for n, (port, desc, hwid) in enumerate(sorted(comports()), 1):
+            if desc == "FT232R USB UART":
+                self.port = port
+                return
+        self.port = 0
+
+    def ports(self):
+        self.ask_for_port()
+        if self.port == 0:
+            reply = QMessageBox.question(self, "Erreur de connexion série",
+                                         "Voulez vous ressaye la verification de la connection serie ?",
+                                         QMessageBox.Yes |
+                                         QMessageBox.No, QMessageBox.Yes)
+            if reply == QMessageBox.Yes:
+                self.ports()
+            else:
+                return 0
+        else:
+            QMessageBox.information(self, "La plateforme est connectée",
+                                    "La plateforme est connectée !!!",
+                                    QMessageBox.Ok,
+                                    QMessageBox.Ok)
+            return self.port
+
+    def read(self):
         pass
 
 
 class RealSense(QWidget):
-    signal_model = pyqtSignal(object)  # signal_camera
-    signal_camera = pyqtSignal(object, object)
+    signal_model = pyqtSignal(object)  # signal_model with data_vertices to display model
+    signal_camera = pyqtSignal(object, object)  # signal_camera with data_vertices and data_textures to pov camera
 
     def __init__(self, width=1280, height=720):
         super(RealSense, self).__init__()
         self.counterstep = 0
-        self.angle = 25 * pi / 180
+        self.connect = False
+        self.angle_x = 0
+        self.angle_y = 25 * pi / 180
+        self.angle_z = 0
 
-        self.verts = np.array([[0, 0, 0]])
-        # self.portt = self.ports()
-        self.init_realsense(width, height)
+        self.platform = False
+        self.mobile = False
 
-    def init_realsense(self, width, height):
+        self.dist_center = 0
+
+        self.lim_x = 0.5
+        self.lim_y = 0.5
+        self.lim_z = 0.5
+
+        self.width = 1280
+        self.height = 720
+
         self.pipeline = rs.pipeline()
         self.config = rs.config()
-        self.config.enable_stream(rs.stream.depth, width, height, rs.format.z16, 30)
+
+        self.verts = np.array([[0, 0, 0]])
+        #self.init_realsense(width, height)
+
+    def init_realsense(self):
+        self.connect = False
+        self.config.enable_stream(rs.stream.depth, self.width, self.height, rs.format.z16, 30)
         # other_stream, other_format = rs.stream.infrared, rs.format.y8
         other_stream, other_format = rs.stream.color, rs.format.rgb8
-        self.config.enable_stream(rs.stream.color, width, height, rs.format.rgb8, 30)
+        self.config.enable_stream(rs.stream.color, self.width, self.height, rs.format.rgb8, 30)
         self.pc = rs.pointcloud()
         # Start streaming
         self.pipeline.start(self.config)
-        self.width_rs = width
-        self.height_rs = height
         self.init_profile_realsense()
+        self.connect = True
 
     def init_profile_realsense(self):
         profile = self.pipeline.get_active_profile()
@@ -307,35 +623,29 @@ class RealSense(QWidget):
         depth_intrinsics = depth_profile.get_intrinsics()
         w, h = depth_intrinsics.width, depth_intrinsics.height
         # Processing blocks
+        self.decimate_option()
+        self.filters_option()
 
+    def profile_stop(self):
+        self.pipeline.stop()
+        self.config.disable_all_streams()
+        """self.config.disable_stream(rs.stream.depth, 0)
+        self.config.disable_stream(rs.stream.color, 1)"""
+
+    def set_resolution(self, width, height):
+        self.width = width
+
+
+    def decimate_option(self, value=0):
         self.decimate = rs.decimation_filter()
-        self.decimate.set_option(rs.option.filter_magnitude, 2 ** 0)
+        self.decimate.set_option(rs.option.filter_magnitude, 2 ** value)
+
+    def filters_option(self):
         self.colorizer = rs.colorizer()
         self.filters = [rs.disparity_transform(),
                         rs.spatial_filter(),
                         rs.temporal_filter(),
                         rs.disparity_transform(False)]
-
-    def ask_for_port(self):
-        for n, (port, desc, hwid) in enumerate(sorted(comports()), 1):
-            if desc == "FT232R USB UART":
-                self.port = port
-                return port
-        return 0
-
-    def ports(self):
-        port = self.ask_for_port()
-        if port == 0:
-            reply = QMessageBox.question(self, "Erreur de connexion série",
-                                         "Voulez vous ressaye la verification de la connection serie ?",
-                                         QMessageBox.Yes |
-                                         QMessageBox.No, QMessageBox.Yes)
-            if reply == QMessageBox.Yes:
-                port = self.ports()
-            else:
-                return 0
-        else:
-            return port
 
     def stream_camera(self):
         points = rs.points()
@@ -414,14 +724,43 @@ class RealSense(QWidget):
 
         vert = np.array(points.get_vertices(2))  # restructuration de la donnée dans des vecteurs n*3
 
-        self.construct_model(vert)
+        if self.platform == True:
+            self.construct_model_platform(vert)
+        elif self.mobile == True:
+            self.construct_model_mobile(vert)
+        else:
+            self.test_construct_model(vert)
 
         # self.signal_model.emit(vert)
 
-    def construct_model(self, vert):
+    def test_setting_construct(self):
+        points = rs.points()
+
+        success, frames = self.pipeline.try_wait_for_frames(timeout_ms=0)  # récupération des images
+        if not success:
+            return
+
+        depth_frame = frames.get_depth_frame()  # récupération de l'image de la profondeur
+
+        depth_frame = self.decimate.process(depth_frame)
+
+        for f in self.filters:  # application des différents filtres
+            depth_frame = f.process(depth_frame)
+
+        points = self.pc.calculate(depth_frame)  # calcul des points
+
+        vert = np.array(points.get_vertices(2))  # restructuration de la donnée dans des vecteurs n*3
+
+        self.test_construct_model(vert)
+
+        # self.signal_model.emit(vert)
+
+    def construct_model_mobile(self, vert):
         ymax = np.max(vert[:, 1])
-        print(ymax)
-        angle_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle))
+
+        angle_x_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle_x))
+        angle_y_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle_y))
+        angle_z_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle_z))
         vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=vert)
 
         tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, vert.nbytes)
@@ -440,16 +779,103 @@ class RealSense(QWidget):
             self.verts = vert
 
         verts_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.verts)
-        res_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
         x_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
         y_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
-        prg.rot_y(queue, self.verts.shape, None, verts_g, angle_g, res_g)
+        z_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
+        prg.rot_x(queue, self.verts.shape, None, verts_g, angle_x_g, x_g)
 
-        cl.enqueue_copy(queue, self.verts, res_g)
+        cl.enqueue_copy(queue, self.verts, x_g)
 
         self.counterstep = self.counterstep + 1
 
         self.signal_model.emit(self.verts)
+
+    def construct_model_platform(self, vert):
+        #ymax = np.max(vert[:, 1])
+
+        angle_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle_y))
+
+        lim_x_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_x))
+
+        lim_y_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_y))
+
+        lim_z_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_z))
+
+        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=vert)
+
+        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, vert.nbytes)
+
+        prg.treatment_platform(queue, vert.shape, None, vert_g, tr_g)
+
+        tr_np = np.empty_like(vert)
+
+        cl.enqueue_copy(queue, tr_np, tr_g)
+
+        vert = tr_np[~np.all(tr_np == 0., axis=1)]
+
+        if self.counterstep != 0:
+            self.verts = np.append(self.verts, vert, axis=0)
+        else:
+            self.verts = vert
+
+        verts_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.verts)
+        res_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
+        prg.rot_y(queue, self.verts.shape, None, verts_g, angle_g, res_g)
+
+        cl.enqueue_copy(queue, self.verts, res_g)
+
+        self.signal_model.emit(self.verts)
+
+    def test_construct_model(self, vert):
+        ymax = np.max(vert[:, 1])
+
+        lim_x_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_x))
+
+        lim_y_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_y))
+
+        lim_z_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_z))
+
+        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=vert)
+
+        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, vert.nbytes)
+
+        prg.treatment_test(queue, vert.shape, None, vert_g, lim_x_g, lim_y_g, lim_z_g, tr_g)
+
+        tr_np = np.empty_like(vert)
+
+        cl.enqueue_copy(queue, tr_np, tr_g)
+
+        vert = tr_np[~np.all(tr_np == 0., axis=1)]
+
+        self.signal_model.emit(vert)
+
+    def set_lim_x(self, x):
+        self.lim_x = x
+
+    def set_lim_y(self, y):
+        self.lim_y = y
+
+    def set_lim_z(self, z):
+        self.lim_z = z
+
+    def set_dist_center(self, dist):
+        self.dist_center = dist
+
+    def set_angle_y(self, angle):
+        self.angle_y = angle
+
+    def set_mode_platform(self):
+        self.platform = True
+        self.mobile = False
+
+    def set_mode_mobile(self):
+        self.platform = False
+        self.mobile = True
+
+    def set_mode_test(self):
+        self.platform = False
+        self.mobile = False
+
 
 
 class GLWidget_Model(QOpenGLWidget):
@@ -466,6 +892,7 @@ class GLWidget_Model(QOpenGLWidget):
         self.vert = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
 
     def set_data(self, vert):
+        print("ici")
         self.vert = vert
         self.update()
 
@@ -476,7 +903,7 @@ class GLWidget_Model(QOpenGLWidget):
 
         glLoadIdentity()
 
-        gluLookAt(0, 0, 0, 0, 0, 1, 0, -1, 0)
+        #gluLookAt(0, 0, 0, 0, 0, 1, 0, -1, 0)
 
         glPointSize(1)
 
@@ -494,16 +921,20 @@ class GLWidget_Model(QOpenGLWidget):
         glFlush()
 
     def setXRotation(self, angle):
-        angle = self.normalizeAngle(angle)
+        self.xRot = angle
+        self.update()
+        """angle = self.normalizeAngle(angle)
         if angle != self.xRot:
             self.xRot = angle
-            self.update()
+            self.update()"""
 
     def setYRotation(self, angle):
-        angle = self.normalizeAngle(angle)
+        self.yRot = angle
+        self.update()
+        """angle = self.normalizeAngle(angle)
         if angle != self.yRot:
             self.yRot = angle
-            self.update()
+            self.update()"""
 
     def setZRotation(self, angle):
         angle = self.normalizeAngle(angle)
@@ -519,8 +950,8 @@ class GLWidget_Model(QOpenGLWidget):
         dy = event.y() - self.lastPos.y()
 
         if event.buttons() & Qt.LeftButton:
-            self.setXRotation(self.xRot + dy)
-            self.setYRotation(self.yRot + dx)
+            self.setXRotation(self.xRot - dx)
+            self.setYRotation(self.yRot - dy)
         elif event.buttons() & Qt.RightButton:
             self.setXRotation(self.xRot + dy)
             self.setZRotation(self.zRot + dx)
@@ -541,11 +972,13 @@ class GLWidget_Camera(QOpenGLWidget):
         self.zRot = 0
         self.yRot = 0
         self.xRot = 0
-
+        self.distance = 2
         self.lastPos = QPoint()
 
-        self.vert = np.random.rand(99999).astype(np.float32).reshape(33333, 3)
-        self.texture = np.random.rand(99999).astype(np.float32).reshape(33333, 3)
+        self.translation = np.array([0, 0, 1], np.float32)
+
+        self.vert = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
+        self.texture = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
 
     def set_data(self, vert, texture):
         self.vert = vert
@@ -561,6 +994,7 @@ class GLWidget_Camera(QOpenGLWidget):
 
         glPointSize(1)
 
+        #glTranslatef(0, 0, self.distance)
         glRotated(self.xRot / 16.0, 1.0, 0.0, 0.0)
         glRotated(self.yRot / 16.0, 0.0, 1.0, 0.0)
         glRotated(self.zRot / 16.0, 0.0, 0.0, 1.0)
@@ -576,6 +1010,22 @@ class GLWidget_Camera(QOpenGLWidget):
         glFlush()
 
     def setXRotation(self, angle):
+        self.xRot = angle
+        self.update()
+        """angle = self.normalizeAngle(angle)
+        if angle != self.xRot:
+            self.xRot = angle
+            self.update()"""
+
+    def setYRotation(self, angle):
+        self.yRot = angle
+        self.update()
+        """angle = self.normalizeAngle(angle)
+        if angle != self.yRot:
+            self.yRot = angle
+            self.update()"""
+
+    """def setXRotation(self, angle):
         angle = self.normalizeAngle(angle)
         if angle != self.xRot:
             self.xRot = angle
@@ -585,7 +1035,7 @@ class GLWidget_Camera(QOpenGLWidget):
         angle = self.normalizeAngle(angle)
         if angle != self.yRot:
             self.yRot = angle
-            self.update()
+            self.update()"""
 
     def setZRotation(self, angle):
         angle = self.normalizeAngle(angle)
@@ -601,11 +1051,16 @@ class GLWidget_Camera(QOpenGLWidget):
         dy = event.y() - self.lastPos.y()
 
         if event.buttons() & Qt.LeftButton:
-            self.setXRotation(self.xRot + 8 * dy)
-            self.setYRotation(self.yRot + 8 * dx)
+            self.setXRotation(self.xRot + dy)
+            self.setYRotation(self.yRot + dx)
         elif event.buttons() & Qt.RightButton:
-            self.setXRotation(self.xRot + 8 * dy)
-            self.setZRotation(self.zRot + 8 * dx)
+            self.setXRotation(self.xRot + dy)
+            self.setZRotation(self.zRot + dx)
+        elif event.buttons() & Qt.MiddleButton:
+            dz = dy * 0.01
+            self.translation -= (0, 0, dz)
+            self.distance -= dz
+
 
     def normalizeAngle(self, angle):
         while angle < 0:
