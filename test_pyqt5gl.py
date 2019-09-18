@@ -13,13 +13,6 @@ from PyQt5.QtWidgets import (QApplication, QHBoxLayout, QOpenGLWidget, QSlider, 
 
 import OpenGL.GL as gl
 
-from OpenGL.GL import shaders
-
-from OpenGL.arrays import vbo
-from OpenGL.GL import *
-from OpenGL.raw.GL.ARB.vertex_array_object import glGenVertexArrays, \
-    glBindVertexArray
-
 from OpenGL import GLU
 
 import pyopencl as cl
@@ -69,17 +62,16 @@ prg = cl.Program(ctx, """
                 }
             }
         }
-    }
+    }    
     
     __kernel void treatment_platform(__global const float *point, __global float *trans_z, __global float *lim_x,
-     __global float *lim_y, __global float *lim_z, __global float *point_prime)
+     __global float *lim_y_high, __global float *lim_y_low, __global float *lim_z, __global float *point_prime)
     {
         float limit_x = *lim_x;
-        float limit_y = *lim_y;
         float limit_z = *lim_z;
         int i = (get_global_id(0) * 2) + get_global_id(0);
         if(point[i] < limit_x && point[i] > -(limit_x)){
-            if(point[i+1] < (limit_y) && point[i+1] > -(limit_y)){
+            if(point[i+1] < (*lim_y_low) && point[i+1] > -(*lim_y_high)){
                 if(point[i+2] > -(limit_z)){
                     point_prime[i] = point[i];
                     point_prime[i+1] = point[i+1];
@@ -138,10 +130,14 @@ prg = cl.Program(ctx, """
 
 class Window(QWidget):
 
+
     def __init__(self):
         super(Window, self).__init__()
 
+        self.connect_rs : bool
         self.connect_rs = False
+
+        self.port = 0
 
         self.rs = RealSense()
         self.platform = Platform()
@@ -220,17 +216,23 @@ class Window(QWidget):
 
         """Initialisation de la gestion des modes"""
 
-        self.SPB_lim_x = QDoubleSpinBox()
+        """self.SPB_lim_x = QDoubleSpinBox()
         self.SPB_lim_x.setRange(0, 2)
         self.SPB_lim_x.setValue(0.5)
         self.SPB_lim_x.setDecimals(5)
-        self.SPB_lim_x.valueChanged.connect(self.rs.set_lim_x)
+        self.SPB_lim_x.valueChanged.connect(self.rs.set_lim_x)"""
 
-        self.SPB_lim_y = QDoubleSpinBox()
-        self.SPB_lim_y.setRange(0, 2)
-        self.SPB_lim_y.setValue(0.5)
-        self.SPB_lim_y.setDecimals(5)
-        self.SPB_lim_y.valueChanged.connect(self.rs.set_lim_y)
+        self.SPB_lim_y_high = QDoubleSpinBox()
+        self.SPB_lim_y_high.setRange(0, 2)
+        self.SPB_lim_y_high.setValue(0.5)
+        self.SPB_lim_y_high.setDecimals(5)
+        self.SPB_lim_y_high.valueChanged.connect(self.rs.set_lim_y_high)
+
+        self.SPB_lim_y_low = QDoubleSpinBox()
+        self.SPB_lim_y_low.setRange(0, 2)
+        self.SPB_lim_y_low.setValue(0.5)
+        self.SPB_lim_y_low.setDecimals(5)
+        self.SPB_lim_y_low.valueChanged.connect(self.rs.set_lim_y_low)
 
         self.SPB_lim_z = QDoubleSpinBox()
         self.SPB_lim_z.setRange(0, 2)
@@ -256,17 +258,17 @@ class Window(QWidget):
         self.SPB_lim_z2.setDecimals(5)
         self.SPB_lim_z2.valueChanged.connect(self.rs.set_lim_z)
 
-        self.SPB_lim_x3 = QDoubleSpinBox()
-        self.SPB_lim_x3.setRange(0, 2)
-        self.SPB_lim_x3.setValue(0.5)
-        self.SPB_lim_x3.setDecimals(5)
-        self.SPB_lim_x3.valueChanged.connect(self.rs.set_lim_x)
+        self.SPB_lim_y_high2 = QDoubleSpinBox()
+        self.SPB_lim_y_high2.setRange(0, 2)
+        self.SPB_lim_y_high2.setValue(0.5)
+        self.SPB_lim_y_high2.setDecimals(5)
+        self.SPB_lim_y_high2.valueChanged.connect(self.rs.set_lim_y_high)
 
-        self.SPB_lim_y3 = QDoubleSpinBox()
-        self.SPB_lim_y3.setRange(0, 2)
-        self.SPB_lim_y3.setValue(0.5)
-        self.SPB_lim_y3.setDecimals(5)
-        self.SPB_lim_y3.valueChanged.connect(self.rs.set_lim_y)
+        self.SPB_lim_y_low2 = QDoubleSpinBox()
+        self.SPB_lim_y_low2.setRange(0, 2)
+        self.SPB_lim_y_low.setValue(0.5)
+        self.SPB_lim_y_low2.setDecimals(5)
+        self.SPB_lim_y_low2.valueChanged.connect(self.rs.set_lim_y_low)
 
         self.SPB_lim_z3 = QDoubleSpinBox()
         self.SPB_lim_z3.setRange(0, 2)
@@ -280,12 +282,23 @@ class Window(QWidget):
         self.SPB_dist_center.setDecimals(5)
         self.SPB_dist_center.valueChanged.connect(self.rs.set_dist_center)
 
+        self.SPB_dist_center2 = QDoubleSpinBox()
+        self.SPB_dist_center2.setRange(0, 2)
+        self.SPB_dist_center2.setValue(5)
+        self.SPB_dist_center2.setDecimals(5)
+        self.SPB_dist_center2.valueChanged.connect(self.rs.set_dist_center)
+
         self.progress = QProgressBar()
 
         self.SPB_angle = QDoubleSpinBox()
         self.SPB_angle.setRange(0, 180)
         self.SPB_angle.setValue(3)
         self.SPB_angle.valueChanged.connect(self.rs.set_angle_y)
+
+        self.SPB_angle2 = QDoubleSpinBox()
+        self.SPB_angle2.setRange(0, 180)
+        self.SPB_angle2.setValue(3)
+        self.SPB_angle2.valueChanged.connect(self.rs.set_angle_y)
 
         self.button_save = QPushButton("Sauvegarde du modèle")
         self.button_save.setMaximumWidth(150)
@@ -325,16 +338,16 @@ class Window(QWidget):
 
         self.mode_platform_widget = QWidget()
         self.mode_mobile_widget = QWidget()
-        self.mode_test_widget = QWidget()
+        self.mode_test_platform_widget = QWidget()
 
         self.layout_mode_platform()
         self.layout_mode_mobile()
-        self.layout_mode_test()
+        self.layout_mode_test_platform()
 
         self.stacked_mode = QStackedWidget(self)
         self.stacked_mode.addWidget(self.mode_platform_widget)
         self.stacked_mode.addWidget(self.mode_mobile_widget)
-        self.stacked_mode.addWidget(self.mode_test_widget)
+        self.stacked_mode.addWidget(self.mode_test_platform_widget)
 
         fourLayout = QVBoxLayout()
         fourLayout.addWidget(self.xyz)
@@ -382,17 +395,19 @@ class Window(QWidget):
         layout_button.addWidget(self.button_save2)
         layout.addLayout(layout_lim)
         layout.addLayout(layout_button)
-        layout.addWidget(self.start_scan)
+        layout.addWidget(self.start_scan2)
         self.mode_mobile_widget.setLayout(layout)
 
     def layout_mode_platform(self):
         layout = QVBoxLayout()
         # layout.setGeometry(50, 50, 200, 200)
         layout_lim = QFormLayout()
-        layout_lim.addRow("Limite X", self.SPB_lim_x)
-        layout_lim.addRow("Limite Y", self.SPB_lim_y)
-        layout_lim.addRow("Limite Z", self.SPB_lim_z)
+        #layout_lim.addRow("Limite X", self.SPB_lim_x)
         layout_lim.addRow("Angle Rotation", self.SPB_angle)
+        layout_lim.addRow("Limite Y Haut", self.SPB_lim_y_high)
+        layout_lim.addRow("Limite Y Bas", self.SPB_lim_y_low)
+        layout_lim.addRow("Limite Z", self.SPB_lim_z)
+        layout_lim.addRow("Distance Centre", self.SPB_dist_center)
         layout_lim.addRow("Avancement", self.progress)
         layout_button_1 = QHBoxLayout()
         layout_button_1.addWidget(self.rs_button)
@@ -400,12 +415,43 @@ class Window(QWidget):
         layout.addLayout(layout_lim)
         layout.addLayout(layout_button_1)
         layout_button_2 = QHBoxLayout()
-        layout_button_2.addWidget(self.start_scan2)
+        layout_button_2.addWidget(self.start_scan)
         layout_button_2.addWidget(self.button_save)
         layout.addLayout(layout_button_2)
         self.mode_platform_widget.setLayout(layout)
 
-    def layout_mode_test(self):
+    def layout_mode_test_platform(self):
+
+        layout = QVBoxLayout()
+        # layout.setGeometry(50, 50, 200, 200)
+        layout_lim = QFormLayout()
+        # layout_lim.addRow("Limite X", self.SPB_lim_x)
+        layout_lim.addRow("Angle Rotation", self.SPB_angle2)
+        layout_lim.addRow("Limite Y Haut", self.SPB_lim_y_high2)
+        layout_lim.addRow("Limite Y Bas", self.SPB_lim_y_low2)
+        layout_lim.addRow("Limite Z", self.SPB_lim_z3)
+        layout_lim.addRow("Distance Centre", self.SPB_dist_center2)
+        layout_button = QHBoxLayout()
+        layout_button.addWidget(self.rs_button3)
+        layout_button.addWidget(self.start_test)
+        layout.addLayout(layout_lim)
+        layout.addLayout(layout_button)
+        self.mode_test_platform_widget.setLayout(layout)
+
+        """layout = QVBoxLayout()
+        # layout.setGeometry(50, 50, 200, 200)
+        layout_lim = QFormLayout()
+        layout_lim.addRow("Limite X", self.SPB_lim_x3)
+        layout_lim.addRow("Limite Y", self.SPB_lim_y3)
+        layout_lim.addRow("Limite Z", self.SPB_lim_z3)
+        layout_button = QHBoxLayout()
+        layout_button.addWidget(self.rs_button3)
+        layout_button.addWidget(self.start_test)
+        layout.addLayout(layout_lim)
+        layout.addLayout(layout_button)
+        self.mode_test_platform_widget.setLayout(layout)"""
+
+    def layout_mode_test_mobile(self):
         layout = QVBoxLayout()
         # layout.setGeometry(50, 50, 200, 200)
         layout_lim = QFormLayout()
@@ -417,7 +463,7 @@ class Window(QWidget):
         layout_button.addWidget(self.start_test)
         layout.addLayout(layout_lim)
         layout.addLayout(layout_button)
-        self.mode_test_widget.setLayout(layout)
+        self.mode_test_mobile_widget.setLayout(layout)
 
     def layout_Logo_Qt(self):
         layout = QHBoxLayout()
@@ -438,6 +484,9 @@ class Window(QWidget):
         try:
             self.rs.init_realsense()
             self.connect_rs = self.rs.connect
+            QMessageBox.information(self, "La caméra est connectée",
+                                    "La caméra est maintenant connectée",
+                                    QMessageBox.Ok, QMessageBox.Ok)
 
         except:
             QMessageBox.information(self, "Attention la caméra n'est pas connectée",
@@ -452,33 +501,47 @@ class Window(QWidget):
         self.rs.stream_camera()
 
     def click_scan_platform(self):
-        self.choose_view(1)
-        self.rs.set_mode_platform()
-        self.timer.timeout.connect(self.scan)
-        self.timer.start(10)
+        if self.connect_rs == True and self.port != 0:
+            self.choose_view(1)
+            self.disabled_to_scan()
+            self.rs.set_mode_platform()
+            self.timer.timeout.connect(self.scan)
+            self.timer.start(10)
+        else:
+            QMessageBox.information(self, "Attention le scan ne peut pas débuté",
+                                    "Veuillez connecter une caméra RealSense ainsi que la plateforme"
+                                    "pour pouvoir lancer un scan", QMessageBox.Ok, QMessageBox.Ok)
 
     def click_scan_mobile(self):
-        self.choose_view(1)
-        self.rs.set_mode_mobile()
-        self.timer.timeout.connect(self.scan)
-        self.timer.start(10)
+        if self.connect_rs:
+            self.choose_view(1)
+            self.disabled_to_scan()
+            self.rs.set_mode_mobile()
+            self.timer.timeout.connect(self.scan)
+            self.timer.start(10)
+        else:
+            QMessageBox.information(self, "Attention le scan ne peut pas débuté",
+                                    "Veuillez connecter une caméra RealSense"
+                                    "pour pouvoir lancer un scan", QMessageBox.Ok, QMessageBox.Ok)
 
     def click_scan_test(self):
-        self.choose_view(1)
-        self.rs.set_mode_test()
-        self.timer.timeout.connect(self.scan)
-        self.timer.start(10)
-
+        if self.connect_rs:
+            self.choose_view(1)
+            self.disabled_to_scan()
+            self.rs.set_mode_test()
+            self.timer.timeout.connect(self.scan)
+            self.timer.start(10)
+        else:
+            QMessageBox.information(self, "Attention le test ne peut pas débuté",
+                                    "Veuillez connecter une caméra RealSense"
+                                    "pour pouvoir lancer un test", QMessageBox.Ok, QMessageBox.Ok)
     def scan(self):
         self.rs.recovery_data_model()
         self.rs.signal_model.connect(self.glWidget_Model.set_data)
 
-        """print(self.filename.displayText())
-        self.filename.setReadOnly(1)"""
-
     def closeEvent(self, event):
 
-        reply = QMessageBox.question(self, "Attention Fermeture de l'application",
+        reply = QMessageBox.question(self, "Attention fermeture de l'application",
                                      "Etes vous sur de vouloir quitter ?", QMessageBox.Close |
                                      QMessageBox.Cancel, QMessageBox.Cancel)
 
@@ -490,7 +553,7 @@ class Window(QWidget):
     def choose_view(self, i):
         self.stacked_gl.setCurrentIndex(i)
         if i == 2:
-            if self.connect_rs == True:
+            if self.connect_rs:
                 self.rs.signal_camera.connect(self.glWidget_Camera.set_data)
                 self.timer.timeout.connect(self.stream)
                 self.timer.start(10)
@@ -504,11 +567,11 @@ class Window(QWidget):
         if i == 0:
             self.rs.set_resolution(1280, 720)
         elif i == 1:
-            self.rs.set_resolution(853, 480)
+            self.rs.set_resolution(848, 480)
         else:
             self.rs.set_resolution(640, 360)
 
-        if self.connect_rs == True:
+        if self.connect_rs:
             self.timer.stop()
             self.rs.profile_stop()
             self.rs.init_realsense()
@@ -521,27 +584,37 @@ class Window(QWidget):
     def save_file(self):                            ##A FINIR
         self.name = self.filename.displayText()
         if self.name[0] and self.filepath[0]:
-            if(self.xyz.isChecked()):
+            if self.xyz.isChecked():
                 pass
-            if(self.pcd.isChecked()):
+            if self.pcd.isChecked():
                 pass
-            if(self.obj.isChecked()):
+            if self.obj.isChecked():
                 pass
-            if(self.ply.isChecked()):
+            if self.ply.isChecked():
                 pass
-            if(self.stl.isChecked()):
+            if self.stl.isChecked():
                 pass
-            if(self.vtk.isChecked()):
+            if self.vtk.isChecked():
                 pass
+        else:
+            QMessageBox.information(self, "Attention problème lors de la sauvegarde",
+                                    "Veuillez donner un nom aux fichiers ainsi que le chemin pour la sauvegarde",
+                                    QMessageBox.Ok,
+                                    QMessageBox.Ok)
 
     def init_platform(self):
         self.port = self.platform.ports()
+
+    def disabled_to_scan(self):
+        self.list_view.setDisabled(True)
+        self.list_resolution.setDisabled(True)
 
 
 class Platform(QWidget):
 
 
     def __init__(self):
+        super(Platform, self).__init__()
         self.port = 0
 
     def ask_for_port(self):
@@ -589,6 +662,9 @@ class RealSense(QWidget):
         self.mobile = False
 
         self.dist_center = 0
+
+        self.lim_y_high = 0,5
+        self.lim_y_low = 0.2
 
         self.lim_x = 0.5
         self.lim_y = 0.5
@@ -791,13 +867,18 @@ class RealSense(QWidget):
         self.signal_model.emit(self.verts)
 
     def construct_model_platform(self, vert):
+        self.lim_x = self.dist_center * math.tan(math.degrees(self.angle_y))
         #ymax = np.max(vert[:, 1])
 
         angle_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle_y))
 
+        dist_center_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.dist_center))
+
         lim_x_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_x))
 
-        lim_y_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_y))
+        lim_y_high_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_y_high))
+
+        lim_y_low_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_y_low))
 
         lim_z_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_z))
 
@@ -829,9 +910,18 @@ class RealSense(QWidget):
     def test_construct_model(self, vert):
         ymax = np.max(vert[:, 1])
 
+        angle = self.angle_y * (math.pi / 180)
+
+        self.lim_x = self.dist_center * math.tan(math.radians(self.angle_y))
+        print(self.lim_x)
+
+        dist_center_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.dist_center))
+
         lim_x_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_x))
 
-        lim_y_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_y))
+        lim_y_high_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_y_high))
+
+        lim_y_low_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_y_low))
 
         lim_z_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_z))
 
@@ -839,7 +929,8 @@ class RealSense(QWidget):
 
         tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, vert.nbytes)
 
-        prg.treatment_test(queue, vert.shape, None, vert_g, lim_x_g, lim_y_g, lim_z_g, tr_g)
+        prg.treatment_platform(queue, vert.shape, None, vert_g, dist_center_g,lim_x_g,
+                               lim_y_high_g, lim_y_low_g, lim_z_g, tr_g)
 
         tr_np = np.empty_like(vert)
 
@@ -847,10 +938,18 @@ class RealSense(QWidget):
 
         vert = tr_np[~np.all(tr_np == 0., axis=1)]
 
+        vert = np.flip(vert, 0)
+
         self.signal_model.emit(vert)
 
     def set_lim_x(self, x):
         self.lim_x = x
+
+    def set_lim_y_high(self, y):
+        self.lim_y_high = y
+
+    def set_lim_y_low(self, y):
+        self.lim_y_low = y
 
     def set_lim_y(self, y):
         self.lim_y = y
@@ -863,6 +962,7 @@ class RealSense(QWidget):
 
     def set_angle_y(self, angle):
         self.angle_y = angle
+        self.lim_x = self.dist_center * math.tan(math.degrees(angle))
 
     def set_mode_platform(self):
         self.platform = True
@@ -892,7 +992,6 @@ class GLWidget_Model(QOpenGLWidget):
         self.vert = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
 
     def set_data(self, vert):
-        print("ici")
         self.vert = vert
         self.update()
 
@@ -903,14 +1002,16 @@ class GLWidget_Model(QOpenGLWidget):
 
         glLoadIdentity()
 
-        #gluLookAt(0, 0, 0, 0, 0, 1, 0, -1, 0)
+        glRotated(180, 1, 0, 0)
+
+        #gluLookAt(1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 
         glPointSize(1)
 
         # rotate 3D model
-        glRotated(self.xRot, 1.0, 0.0, 0.0)
-        glRotated(self.yRot, 0.0, 1.0, 0.0)
-        glRotated(self.zRot, 0.0, 0.0, 1.0)
+        glRotated(self.xRot / 16, 1.0, 0.0, 0.0)
+        glRotated(self.yRot / 16, 0.0, 1.0, 0.0)
+        glRotated(self.zRot / 16, 0.0, 0.0, 1.0)
 
         # display 3D model
         glEnableClientState(GL_VERTEX_ARRAY)
@@ -923,10 +1024,6 @@ class GLWidget_Model(QOpenGLWidget):
     def setXRotation(self, angle):
         self.xRot = angle
         self.update()
-        """angle = self.normalizeAngle(angle)
-        if angle != self.xRot:
-            self.xRot = angle
-            self.update()"""
 
     def setYRotation(self, angle):
         self.yRot = angle
