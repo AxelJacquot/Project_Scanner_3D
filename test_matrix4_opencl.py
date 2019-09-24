@@ -97,7 +97,7 @@ def capture():
         cl.enqueue_copy(queue, y_np, y_g)
 
 
-    return c, res_np,x_np,y_np
+    return c, res_np, x_np, y_np
 
 
 if __name__ == '__main__':
