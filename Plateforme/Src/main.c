@@ -57,8 +57,8 @@
 #define ENABLE_PIN	GPIO_PIN_7
 #define PWM_PIN		GPIO_PIN_8
 
-#define DISABLE_MOTOR	HAL_GPIO_WritePin(GPIOD,ENABLE_PIN,0);
-#define ENABLE_MOTOR	HAL_GPIO_WritePin(GPIOD,ENABLE_PIN,1);
+#define DISABLE_MOTOR	HAL_GPIO_WritePin(GPIOD,ENABLE_PIN,1);
+#define ENABLE_MOTOR	HAL_GPIO_WritePin(GPIOD,ENABLE_PIN,0);
 
 /* USER CODE END PD */
 
@@ -159,12 +159,12 @@ int main(void)
   	Timer_Mode_PWM_Config(&TIM_Handle, &PWM_Handle, TIM_OCMODE_PWM2, TIM_OCPOLARITY_HIGH);
 
 	HAL_UART_Receive_IT(&huart2, &data, 1);
-	Timer_PWM_Pulse_Channel(&TIM_Handle, &PWM_Handle, TIM_CHANNEL_3, 1500);
+	Timer_PWM_Pulse_Channel(&TIM_Handle, &PWM_Handle, TIM_CHANNEL_3, 3000);
 	HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);
 	HAL_GPIO_WritePin(GPIOB,SENS_PIN,1);
 	DISABLE_MOTOR;
 
-	unsigned char data_send = 0xaa;
+	unsigned char data_send = 90;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -174,14 +174,17 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-		if(data_receive){
+		if(data){
 			counter = 0;
+			data = 0;
 			ENABLE_MOTOR;
-			while(counter != 64);
-			DISABLE_MOTOR;
+			while(counter != 64);	//64
+			//DISABLE_MOTOR;
 			HAL_UART_Transmit(&huart2, &data_send, 1, 10);
-			data_receive = 0;
+
 		}
+		DISABLE_MOTOR;
+		//HAL_UART_Transmit(&huart2, &data_send, 1, 10);
 
 	}
   /* USER CODE END 3 */
@@ -244,9 +247,9 @@ static void MX_TIM3_Init(void)
 
   /* USER CODE END TIM3_Init 1 */
   htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 32;
+  htim3.Init.Prescaler = 0;
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 4000;
+  htim3.Init.Period = 0;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
@@ -259,7 +262,7 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM2;
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
