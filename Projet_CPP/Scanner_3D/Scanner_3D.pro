@@ -17,11 +17,19 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
     glwidget.cpp \
+    glwidget_camera.cpp \
+    glwidget_model.cpp \
     main.cpp \
+    platform.cpp \
+    realsense.cpp \
     window_scanner.cpp
 
 HEADERS += \
     glwidget.h \
+    glwidget_camera.h \
+    glwidget_model.h \
+    platform.h \
+    realsense.h \
     window_scanner.h
 
 # Default rules for deployment.

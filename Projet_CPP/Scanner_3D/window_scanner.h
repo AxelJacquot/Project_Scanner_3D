@@ -2,28 +2,31 @@
 #define WINDOW_SCANNER_H
 
 #include <QMainWindow>
-#include<QHBoxLayout>
-#include<QSlider>
-#include<QPushButton>
-#include<QCheckBox>
-#include<QLabel>
-#include<QComboBox>
-#include<QVBoxLayout>
-#include<QMessageBox>
-#include<QSpinBox>
-#include<QLineEdit>
-#include<QStackedWidget>
-#include<QFormLayout>
-#include<QDesktopWidget>
-#include<QFileDialog>
-#include<QDoubleSpinBox>
-#include<QProgressBar>
-#include<QTimer>
-#include<QCloseEvent>
-#include<glwidget.h>
-#include<glwidget_camera.h>
-#include<glwidget_model.h>
-#include<platform.h>
+#include <QHBoxLayout>
+#include <QSlider>
+#include <QPushButton>
+#include <QCheckBox>
+#include <QLabel>
+#include <QComboBox>
+#include <QVBoxLayout>
+#include <QMessageBox>
+#include <QSpinBox>
+#include <QLineEdit>
+#include <QStackedWidget>
+#include <QFormLayout>
+#include <QDesktopWidget>
+#include <QFileDialog>
+#include <QDoubleSpinBox>
+#include <QProgressBar>
+#include <QTimer>
+#include <QCloseEvent>
+#include <QProgressBar>
+
+#include <glwidget.h>
+#include <glwidget_camera.h>
+#include <glwidget_model.h>
+#include <platform.h>
+#include <realsense.h>
 
 class Window_Scanner : public QMainWindow
 {
@@ -31,7 +34,7 @@ class Window_Scanner : public QMainWindow
 
 public:
     Window_Scanner(QWidget *parent = nullptr);
-    ~Window_Scanner();
+    ~Window_Scanner(void);
 
     void layout_mode_mobile(void);
     void layout_mode_platform(void);
@@ -56,11 +59,11 @@ public:
 
     void closeEvent(QCloseEvent event);
 
-    void choose_view(char i);
+    void choose_view(int i);
 
-    void choose_resolution(char i);
+    void choose_resolution(int i);
 
-    void choose_mode(char i);
+    void choose_mode(int i);
 
     void save_file(void);
 
@@ -69,74 +72,76 @@ public:
     void disable_to_scan(void);
 
 private:
-    bool connect_rs;
+    bool connect_rs = false;
     QString m_out = "";
     QString m_port = "";
 
+    RealSense m_rs;
 
+    QTimer m_timer;
 
-    QTimer m_timer();
+    QComboBox *m_list_view = new QComboBox(this);
+    QComboBox *m_list_resolution = new QComboBox(this);
+    QComboBox *m_list_mode = new QComboBox(this);
 
-    QComboBox m_list_view();
-    QComboBox m_list_resolution();
-    QComboBox m_list_mode();
+    GLWidget *m_glwidget = new GLWidget();
+    GLWidget_Camera *m_glwidget_Camera = new GLWidget_Camera();
+    GLWidget_Model *m_glwidget_Model = new GLWidget_Model();
+    QWidget *m_camera_view_widget = new QWidget(this);
+    QWidget *m_model_view_widget = new QWidget(this);
+    QWidget *m_logo_qt_widget = new QWidget(this);
+    QStackedWidget *m_stacked_gl = new QStackedWidget(this);
 
-    GLWidget m_glwidget();
-    GLWidget_Camera m_glwidget_();
-    GLWidget_Model m_glwidget_model();
-    QWidget m_camera_view_widget();
-    QWidget m_model_view_widget();
-    QWidget m_logo_qt_widget();
-    QStackedWidget m_stacked_gl();
+    QCheckBox *m_pcd = new QCheckBox("PCD", this);
+    QCheckBox *m_obj = new QCheckBox("OBJ", this);
+    QCheckBox *m_stl = new QCheckBox("STL", this);
+    QCheckBox *m_ply = new QCheckBox("STL", this);
+    QCheckBox *m_vtk = new QCheckBox("VTK", this);
 
-    QCheckBox m_pcd();
-    QCheckBox m_obj();
-    QCheckBox m_stl();
-    QCheckBox m_ply();
-    QCheckBox m_vtk();
+    QLineEdit *m_filename;
+    QPushButton *m_button_Close = new QPushButton("Close", this);
+    QPushButton *m_button_path = new QPushButton("Chemin", this);
 
-    QLineEdit m_filename();
-    QPushButton m_button_path();
+    QDoubleSpinBox *m_angle = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_dist_center = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_lim_y_high = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_lim_y_low = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_lim_z = new QDoubleSpinBox(this);
+    QProgressBar *m_progress = new QProgressBar(this);
+    QPushButton *m_button_save = new QPushButton("Save", this);
+    QPushButton *m_button_rs = new QPushButton("Connect Camera", this);
+    QPushButton *m_button_start_scan = new QPushButton("Start Scan", this);
+    QPushButton *m_button_stop_scan = new QPushButton("Stop Scan", this);
+    QPushButton *m_button_platform = new QPushButton("Connect Platform", this);
 
-    QDoubleSpinBox m_angle();
-    QDoubleSpinBox m_dist_center();
-    QDoubleSpinBox m_lim_y_high();
-    QDoubleSpinBox m_lim_y_low();
-    QDoubleSpinBox m_lim_z();
-    QPushButton m_button_save();
-    QPushButton m_button_rs();
-    QPushButton m_button_start_scan();
-    QPushButton m_button_stop_scan();
-    QPushButton m_button_platform();
+    QDoubleSpinBox *m_angle2 = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_dist_center2 = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_lim_y_high_2 = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_lim_y_low_2 = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_lim_z2 = new QDoubleSpinBox(this);
+    QPushButton *m_button_rs2 = new QPushButton("Connect Camera", this);
+    QPushButton *m_button_test = new QPushButton("Start_test", this);
 
-    QDoubleSpinBox m_angle2();
-    QDoubleSpinBox m_dist_center2();
-    QDoubleSpinBox m_lim_y_high_2();
-    QDoubleSpinBox m_lim_y_low_2();
-    QDoubleSpinBox m_lim_z2();
-    QPushButton m_button_rs2();
+    QDoubleSpinBox *m_lim_x3 = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_lim_y3 = new QDoubleSpinBox(this);
+    QDoubleSpinBox *m_lim_z3 = new QDoubleSpinBox(this);
+    QPushButton *m_button_save2 = new QPushButton("Save", this);
+    QPushButton *m_button_rs3 = new QPushButton("Connect Camera", this);
+    QPushButton *m_button_start_scan2 = new QPushButton("Start Scan", this);
+    QPushButton *m_button_stop_scan2 = new QPushButton("Stop Scan", this);
 
-    QDoubleSpinBox m_lim_x3();
-    QDoubleSpinBox m_lim_y3();
-    QDoubleSpinBox m_lim_z3();
-    QPushButton m_button_save2();
-    QPushButton m_button_rs3();
-    QPushButton m_button_start_scan2();
-    QPushButton m_button_stop_scan2();
+    QWidget *m_mode_platform_widget = new QWidget(this);
+    QWidget *m_mode_mobile_widget = new QWidget(this);
+    QWidget *m_mode_test_platform = new QWidget(this);
+    QStackedWidget *m_stacked_mode = new QStackedWidget(this);
 
-    QWidget m_mode_platform_widget();
-    QWidget m_mode_mobile_widget();
-    QWidget m_mode_test_platform();
-    QStackedWidget m_stacked_mode();
+    QVBoxLayout *m_layout_box = new QVBoxLayout(this);
 
-    QVBoxLayout m_layout_box();
+    QFormLayout *m_layout_choice = new QFormLayout(this);
 
-    QFormLayout m_layout_choice();
+    QHBoxLayout *m_layout_button = new QHBoxLayout(this);
 
-    QHBoxLayout m_layout_button();
-
-    QVBoxLayout m_layout_final();
-
+    QVBoxLayout *m_main_layout = new QVBoxLayout(this);
 
 };
 
