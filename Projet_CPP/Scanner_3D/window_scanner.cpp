@@ -21,8 +21,8 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     m_list_resolution->setMaximumWidth(150);
     connect(m_list_resolution, SIGNAL(currentIndexChanged(int)), this, SLOT(choose_resolution(int)));
 
-    m_filename->setMaxLength(10);
-    m_filename->setMaximumWidth(150);
+    /*m_filename->setMaxLength(10);
+    m_filename->setMaximumWidth(150);*/
 
     m_button_Close->setMaximumWidth(150);
     //connect(m_button_Close, SIGNAL(clicked()), this, close());
@@ -78,7 +78,7 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     connect(m_button_start_scan, SIGNAL(clicked()), this, SLOT(click_scan_platform()));
 
     m_button_stop_scan->setMaximumWidth(150);
-    connect(m_button_stop_scan, SIGNAL(cliked()), this, SLOT(click_scan_stop()));
+    //connect(m_button_stop_scan, SIGNAL(cliked()), this, SLOT(click_stop_scan()));
 
     //  Mode Test Plateforme  //
 
@@ -140,13 +140,54 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     connect(m_button_start_scan2, SIGNAL(clicked()), this, SLOT(click_scan_mobile()));
 
     m_button_stop_scan2->setMaximumWidth(150);
-    connect(m_button_stop_scan2, SIGNAL(cliked()), this, SLOT(click_scan_stop()));
+    //connect(m_button_stop_scan2, SIGNAL(cliked()), this, SLOT(click_stop_scan()));
 
+    layout_mode_platform();
+    layout_mode_mobile();
+    layout_mode_test();
 
+    m_stacked_mode->addWidget(m_mode_platform_widget);
+    m_stacked_mode->addWidget(m_mode_mobile_widget);
+    m_stacked_mode->addWidget(m_mode_test_platform);
 
-    m_main_layout->addWidget(m_list_view);
-    m_main_layout->addWidget(m_pcd);
-    this->setLayout(m_main_layout);
+    QVBoxLayout *m_layout_box = new QVBoxLayout(this);
+
+    QFormLayout *m_layout_choice = new QFormLayout(this);
+
+    QHBoxLayout *m_layout_button = new QHBoxLayout(this);
+
+    QVBoxLayout *m_layout_user = new QVBoxLayout(this);
+
+    QVBoxLayout *m_main_layout = new QVBoxLayout(this);
+
+    m_layout_box->addWidget(m_obj);
+    m_layout_box->addWidget(m_pcd);
+    m_layout_box->addWidget(m_stl);
+    m_layout_box->addWidget(m_ply);
+    m_layout_box->addWidget(m_vtk);
+
+    m_layout_choice->addRow("Choice visu", m_list_view);
+    m_layout_choice->addRow("Choice resolution", m_list_resolution);
+    m_layout_choice->addRow("Choice 3D Format", m_layout_box);
+    m_layout_choice->addRow("File Name", m_filename);
+    m_layout_choice->addRow("Path Save", m_button_path);
+    m_layout_choice->addRow("Mode Choice", m_list_mode);
+
+    m_layout_button->addWidget(m_button_Close);
+
+    m_layout_user->addLayout(m_layout_choice);
+    m_layout_user->addWidget(m_stacked_mode);
+    m_layout_user->addLayout(m_layout_button);
+
+    m_main_layout->addWidget(m_stacked_gl);
+    m_main_layout->addLayout(m_layout_user);
+
+    QWidget *widget = new QWidget(this);
+    widget->setWindowTitle("Scanner 3D");
+    widget->setLayout(m_main_layout);
+
+    setCentralWidget(widget);
+    printf("ici");
 }
 
 Window_Scanner::~Window_Scanner()
@@ -156,34 +197,80 @@ Window_Scanner::~Window_Scanner()
 
 void Window_Scanner::layout_mode_mobile()
 {
-    QVBoxLayout layout;
-    QFormLayout layout_lim;
+    QVBoxLayout *layout = new QVBoxLayout();
+    QFormLayout *layout_lim = new QFormLayout();
+    layout_lim->addRow("Limite X", m_lim_x3);
+    layout_lim->addRow("Limite Y", m_lim_y3);
+    layout_lim->addRow("Limite Z", m_lim_z3);
+    QHBoxLayout *layout_button = new QHBoxLayout();
+    layout_button->addWidget(m_button_rs3);
+    layout_button->addWidget(m_button_start_scan2);
+    layout_button->addWidget(m_button_save2);
+    layout->addLayout(layout_lim);
+    layout->addLayout(layout_button);
+    m_mode_mobile_widget->setLayout(layout);
 
 }
 
 void Window_Scanner::layout_mode_platform()
 {
-
+    QVBoxLayout *layout = new QVBoxLayout();
+    QFormLayout *layout_lim = new QFormLayout();
+    QHBoxLayout *layout_button1 = new QHBoxLayout();
+    QHBoxLayout *layout_button2 = new QHBoxLayout();
+    layout_lim->addRow("Rotation Angle", m_angle);
+    layout_lim->addRow("Limite Y High", m_lim_y_high);
+    layout_lim->addRow("Limite Y Low", m_lim_y_low);
+    layout_lim->addRow("Limite Z", m_lim_z);
+    layout_lim->addRow("Center Distance", m_dist_center);
+    layout_lim->addRow("Progress", m_progress);
+    layout_button1->addWidget(m_button_rs);
+    layout_button1->addWidget(m_button_platform);
+    layout_button2->addWidget(m_button_start_scan);
+    layout_button2->addWidget(m_button_save);
+    layout_button2->addWidget(m_button_stop_scan);
+    layout->addLayout(layout_lim);
+    layout->addLayout(layout_button1);
+    layout->addLayout(layout_button2);
+    m_mode_platform_widget->setLayout(layout);
 }
 
 void Window_Scanner::layout_mode_test()
 {
-
+    QVBoxLayout *layout = new QVBoxLayout();
+    QFormLayout *layout_lim = new QFormLayout();
+    QHBoxLayout *layout_button1 = new QHBoxLayout();
+    layout_lim->addRow("Rotation Angle", m_angle2);
+    layout_lim->addRow("Limite Y High", m_lim_y_high_2);
+    layout_lim->addRow("Limite Y Low", m_lim_y_low_2);
+    layout_lim->addRow("Limite Z", m_lim_z2);
+    layout_lim->addRow("Center Distance", m_dist_center2);
+    layout_button1->addWidget(m_button_rs2);
+    layout_button1->addWidget(m_button_test);
+    layout->addLayout(layout_lim);
+    layout->addLayout(layout_button1);
+    m_mode_test_platform->setLayout(layout);
 }
 
 void Window_Scanner::layout_logo_qt()
 {
-
+    QHBoxLayout *layout = new QHBoxLayout();
+    layout->addWidget(m_glwidget);
+    m_logo_qt_widget->setLayout(layout);
 }
 
 void Window_Scanner::layout_camera_view()
 {
-
+    QHBoxLayout *layout = new QHBoxLayout();
+    layout->addWidget(m_glwidget_Camera);
+    m_camera_view_widget->setLayout(layout);
 }
 
 void Window_Scanner::layout_model_view()
 {
-
+    QHBoxLayout *layout = new QHBoxLayout();
+    layout->addWidget(m_glwidget_Model);
+    m_model_view_widget->setLayout(layout);
 }
 
 void Window_Scanner::init_rs()
@@ -248,7 +335,7 @@ void Window_Scanner::choose_resolution(int i)
 
 void Window_Scanner::choose_mode(int i)
 {
-    i++;
+    m_stacked_mode->setCurrentIndex(i);
 }
 
 void Window_Scanner::save_file()

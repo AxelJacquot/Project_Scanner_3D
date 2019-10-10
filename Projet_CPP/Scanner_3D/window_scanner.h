@@ -21,6 +21,8 @@
 #include <QTimer>
 #include <QCloseEvent>
 #include <QProgressBar>
+#include <QLayout>
+#include <Qt>
 
 #include <glwidget.h>
 #include <glwidget_camera.h>
@@ -44,6 +46,9 @@ public:
     void layout_camera_view(void);
     void layout_model_view(void);
 
+
+
+public slots:
     void init_rs(void);
 
     void recover_path(void);
@@ -130,18 +135,12 @@ private:
     QPushButton *m_button_start_scan2 = new QPushButton("Start Scan", this);
     QPushButton *m_button_stop_scan2 = new QPushButton("Stop Scan", this);
 
-    QWidget *m_mode_platform_widget = new QWidget(this);
-    QWidget *m_mode_mobile_widget = new QWidget(this);
-    QWidget *m_mode_test_platform = new QWidget(this);
+    QWidget *m_mode_platform_widget = new QWidget();
+    QWidget *m_mode_mobile_widget = new QWidget();
+    QWidget *m_mode_test_platform = new QWidget();
     QStackedWidget *m_stacked_mode = new QStackedWidget(this);
 
-    QVBoxLayout *m_layout_box = new QVBoxLayout(this);
 
-    QFormLayout *m_layout_choice = new QFormLayout(this);
-
-    QHBoxLayout *m_layout_button = new QHBoxLayout(this);
-
-    QVBoxLayout *m_main_layout = new QVBoxLayout(this);
 
 };
 
