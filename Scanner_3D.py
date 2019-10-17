@@ -131,6 +131,7 @@ prg = cl.Program(ctx, """
 
 class Window(QWidget):
 
+
     def __init__(self):
         super(Window, self).__init__()
 
@@ -147,15 +148,6 @@ class Window(QWidget):
         self.timer = QTimer(self)  # set timer to execute different action
 
         # self.rs.init_profile_realsense()
-
-        self.list_view = QComboBox()
-        self.list_view.insertItem(0, 'Logo Qt')
-        self.list_view.insertItem(1, 'vue Modèle')
-        self.list_view.insertItem(2, 'Vue Caméra')
-
-        self.list_view.currentIndexChanged.connect(self.choose_view)
-
-        self.list_view.setMaximumWidth(150)
 
         self.list_resolution = QComboBox()
         self.list_resolution.insertItem(0, '720p')
@@ -175,11 +167,8 @@ class Window(QWidget):
 
         self.list_mode.currentIndexChanged.connect(self.choose_mode)
 
-        self.glWidget = GLWidget()
         self.glWidget_Model = GLWidget_Model()
-        self.glWidget_Camera = GLWidget_Camera()
-
-        self.glWidget.sizeHint()
+        self.glWidget_Model.sizeHint()
 
         self.xyz = QCheckBox("xyz", self)
         self.pcd = QCheckBox("pcd", self)
@@ -200,20 +189,6 @@ class Window(QWidget):
         self.button_path.setMaximumWidth(150)
         self.button_path.clicked.connect(self.recover_path)
 
-        """Initialisation de l'affichage 3D"""
-
-        self.camera_view_widget = QWidget()
-        self.model_view_widget = QWidget()
-        self.Logo_Qt_widget = QWidget()
-
-        self.layout_Logo_Qt()
-        self.layout_model_view()
-        self.layout_camera_view()
-
-        self.stacked_gl = QStackedWidget(self)
-        self.stacked_gl.addWidget(self.Logo_Qt_widget)
-        self.stacked_gl.addWidget(self.model_view_widget)
-        self.stacked_gl.addWidget(self.camera_view_widget)
 
         """Initialisation de la gestion des modes"""
 
@@ -336,14 +311,6 @@ class Window(QWidget):
         self.rs_button.setMaximumWidth(150)
         self.rs_button.clicked.connect(self.init_rs)
 
-        self.rs_button2 = QPushButton("Connecter Caméra", self)
-        self.rs_button2.setMaximumWidth(150)
-        self.rs_button2.clicked.connect(self.init_rs)
-
-        self.rs_button3 = QPushButton("Connecter Caméra", self)
-        self.rs_button3.setMaximumWidth(150)
-        self.rs_button3.clicked.connect(self.init_rs)
-
         self.platform_button = QPushButton("Connecter Plateforme", self)
         self.platform_button.setMaximumWidth(150)
         self.platform_button.clicked.connect(self.init_platform)
@@ -363,6 +330,15 @@ class Window(QWidget):
         self.stop_scan = QPushButton("Arrêt du scan", self)
         self.stop_scan.setMaximumWidth(150)
         self.stop_scan.clicked.connect(self.click_stop_scan)
+
+        self.stop_scan2 = QPushButton("Arrêt du scan", self)
+        self.stop_scan2.setMaximumWidth(150)
+        self.stop_scan2.clicked.connect(self.click_stop_scan)
+
+        self.stop_scan3 = QPushButton("Arrêt du scan", self)
+        self.stop_scan3.setMaximumWidth(150)
+        self.stop_scan3.clicked.connect(self.click_stop_scan)
+
 
         self.mode_platform_widget = QWidget()
         self.mode_mobile_widget = QWidget()
@@ -386,12 +362,12 @@ class Window(QWidget):
         fourLayout.addWidget(self.vtk)
 
         secondLayout = QFormLayout()
-        secondLayout.addRow("Choix de la visualisation", self.list_view)
         secondLayout.addRow("Choix de la résolution", self.list_resolution)
-        secondLayout.addRow("Choix du mode", self.list_mode)
         secondLayout.addRow("Nom des fichiers", self.filename)
         secondLayout.addRow("Choix des formats 3D", fourLayout)
         secondLayout.addRow("Récupération du chemin", self.button_path)
+        secondLayout.addRow("Connexion Caméra", self.rs_button)
+        secondLayout.addRow("Choix du mode", self.list_mode)
         secondLayout.setAlignment(Qt.AlignRight)
 
         buttonLayout = QHBoxLayout()
@@ -404,7 +380,7 @@ class Window(QWidget):
         thirdLayout.setAlignment(Qt.AlignRight)
 
         self.mainLayout = QHBoxLayout()
-        self.mainLayout.addWidget(self.stacked_gl)
+        self.mainLayout.addWidget(self.glWidget_Model)
         self.mainLayout.addLayout(thirdLayout)
         self.setLayout(self.mainLayout)
 
@@ -419,11 +395,11 @@ class Window(QWidget):
         layout_lim.addRow("Limite Y", self.SPB_lim_y2)
         layout_lim.addRow("Limite Z", self.SPB_lim_z2)
         layout_button = QHBoxLayout()
-        layout_button.addWidget(self.rs_button2)
-        layout_button.addWidget(self.button_save2)
+        layout_button.addWidget(self.start_scan2)
+        layout_button.addWidget(self.stop_scan2)
         layout.addLayout(layout_lim)
         layout.addLayout(layout_button)
-        layout.addWidget(self.start_scan2)
+        layout.addWidget(self.button_save2)
         self.mode_mobile_widget.setLayout(layout)
 
     def layout_mode_platform(self):
@@ -438,15 +414,14 @@ class Window(QWidget):
         layout_lim.addRow("Distance Centre", self.SPB_dist_center)
         layout_lim.addRow("Avancement", self.progress)
         layout_button_1 = QHBoxLayout()
-        layout_button_1.addWidget(self.rs_button)
         layout_button_1.addWidget(self.platform_button)
+        layout_button_1.addWidget(self.start_scan)
         layout.addLayout(layout_lim)
         layout.addLayout(layout_button_1)
         layout_button_2 = QHBoxLayout()
-        layout_button_2.addWidget(self.start_scan)
+        layout_button_2.addWidget(self.stop_scan)
         layout_button_2.addWidget(self.button_save)
         layout.addLayout(layout_button_2)
-        layout.addWidget(self.stop_scan)
         self.mode_platform_widget.setLayout(layout)
 
     def layout_mode_test_platform(self):
@@ -461,13 +436,13 @@ class Window(QWidget):
         layout_lim.addRow("Limite Z", self.SPB_lim_z3)
         layout_lim.addRow("Distance Centre", self.SPB_dist_center2)
         layout_button = QHBoxLayout()
-        layout_button.addWidget(self.rs_button3)
         layout_button.addWidget(self.start_test)
+        layout_button.addWidget(self.stop_scan3)
         layout.addLayout(layout_lim)
         layout.addLayout(layout_button)
         self.mode_test_platform_widget.setLayout(layout)
 
-    def layout_mode_test_mobile(self):
+    """def layout_mode_test_mobile(self):
         layout = QVBoxLayout()
         # layout.setGeometry(50, 50, 200, 200)
         layout_lim = QFormLayout()
@@ -475,26 +450,10 @@ class Window(QWidget):
         layout_lim.addRow("Limite Y", self.SPB_lim_y3)
         layout_lim.addRow("Limite Z", self.SPB_lim_z3)
         layout_button = QHBoxLayout()
-        layout_button.addWidget(self.rs_button3)
         layout_button.addWidget(self.start_test)
         layout.addLayout(layout_lim)
         layout.addLayout(layout_button)
-        self.mode_test_mobile_widget.setLayout(layout)
-
-    def layout_Logo_Qt(self):
-        layout = QHBoxLayout()
-        layout.addWidget(self.glWidget)
-        self.Logo_Qt_widget.setLayout(layout)
-
-    def layout_camera_view(self):
-        layout = QHBoxLayout()
-        layout.addWidget(self.glWidget_Camera)
-        self.camera_view_widget.setLayout(layout)
-
-    def layout_model_view(self):
-        layout = QHBoxLayout()
-        layout.addWidget(self.glWidget_Model)
-        self.model_view_widget.setLayout(layout)
+        self.mode_test_mobile_widget.setLayout(layout)"""
 
     def init_rs(self):
         try:
@@ -716,7 +675,7 @@ class RealSense(QWidget):
 
         self.dist_center = 0.34
 
-        self.lim_y_high = 0, 5
+        self.lim_y_high = 0.5
         self.lim_y_low = 0.2
 
         self.lim_x = 0.5
@@ -729,7 +688,7 @@ class RealSense(QWidget):
         self.pipeline = rs.pipeline()
         self.config = rs.config()
 
-        self.verts = np.array([[0, 0, 0]])
+        self.model = np.array([[0, 0, 0]])
         # self.init_realsense(width, height)
 
     def init_realsense(self):
@@ -741,19 +700,9 @@ class RealSense(QWidget):
         self.pc = rs.pointcloud()
         # Start streaming
         self.pipeline.start(self.config)
-        self.init_profile_realsense()
-        self.connect = True
-
-    def init_profile_realsense(self):
-        profile = self.pipeline.get_active_profile()
-        depth_sensor = profile.get_device().first_depth_sensor()
-        depth_scale = depth_sensor.get_depth_scale()
-        depth_profile = rs.video_stream_profile(profile.get_stream(rs.stream.depth))
-        depth_intrinsics = depth_profile.get_intrinsics()
-        w, h = depth_intrinsics.width, depth_intrinsics.height
-        # Processing blocks
         self.decimate_option()
         self.filters_option()
+        self.connect = True
 
     def profile_stop(self):
         self.pipeline.stop()
@@ -807,10 +756,10 @@ class RealSense(QWidget):
 
         self.pc.map_to(mapped_frame)
 
-        vert = np.asarray(points.get_vertices(2))
+        matrice = np.asarray(points.get_vertices(2))
         texture = np.asarray(points.get_texture_coordinates(2))
 
-        self.signal_camera.emit(vert, texture)
+        self.signal_camera.emit(matrice, texture)
 
         """
         
@@ -823,16 +772,16 @@ class RealSense(QWidget):
         # copy image deta to pyglet
         image_data.set_data(fmt, color_source.strides[0], color_source.ctypes.data)
 
-        verts = np.asarray(points.get_vertices(2)).reshape(h, w, 3)
+        model = np.asarray(points.get_vertices(2)).reshape(h, w, 3)
         texcoords = np.asarray(points.get_texture_coordinates(2))
 
-        if len(vertex_list.vertices) != verts.size:
-            vertex_list.resize(verts.size // 3)
+        if len(vertex_list.vertices) != model.size:
+            vertex_list.resize(model.size // 3)
             # need to reassign after resizing
-            vertex_list.vertices = verts.ravel()
+            vertex_list.vertices = model.ravel()
             vertex_list.tex_coords = texcoords.ravel()
 
-        copy(vertex_list.vertices, verts)
+        copy(vertex_list.vertices, model)
         copy(vertex_list.tex_coords, texcoords)"""
 
     def recovery_data_model(self):
@@ -851,16 +800,16 @@ class RealSense(QWidget):
 
         points = self.pc.calculate(depth_frame)  # calcul des points
 
-        vert = np.array(points.get_vertices(2))  # restructuration de la donnée dans des vecteurs n*3
+        matrice = np.array(points.get_vertices(2))  # restructuration de la donnée dans une matrice 3*1
 
         if self.platform == True:
-            self.construct_model_platform(vert)
+            self.construct_model_platform(matrice)
         elif self.mobile == True:
-            self.construct_model_mobile(vert)
+            self.construct_model_mobile(matrice)
         else:
-            self.test_construct_model(vert)
+            self.test_construct_model(matrice)
 
-        # self.signal_model.emit(vert)
+        # self.signal_model.emit(matrice)
 
     def test_setting_construct(self):
         points = rs.points()
@@ -878,49 +827,49 @@ class RealSense(QWidget):
 
         points = self.pc.calculate(depth_frame)  # calcul des points
 
-        vert = np.array(points.get_vertices(2))  # restructuration de la donnée dans des vecteurs n*3
+        matrice = np.array(points.get_vertices(2))  # restructuration de la donnée dans des vecteurs n*3
 
-        self.test_construct_model(vert)
+        self.test_construct_model(matrice)
 
-        # self.signal_model.emit(vert)
+        # self.signal_model.emit(matrice)
 
-    def construct_model_mobile(self, vert):
-        ymax = np.max(vert[:, 1])
+    def construct_model_mobile(self, matrice):
+        ymax = np.max(matrice[:, 1])
 
         angle_x_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle_x))
         angle_y_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle_y))
         angle_z_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.angle_z))
-        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=vert)
+        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=matrice)
 
-        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, vert.nbytes)
+        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, matrice.nbytes)
 
-        prg.traitement(queue, vert.shape, None, vert_g, tr_g)
+        prg.traitement(queue, matrice.shape, None, vert_g, tr_g)
 
-        tr_np = np.empty_like(vert)
+        tr_np = np.empty_like(matrice)
 
         cl.enqueue_copy(queue, tr_np, tr_g)
 
-        vert = tr_np[~np.all(tr_np == 0., axis=1)]
+        matrice = tr_np[~np.all(tr_np == 0., axis=1)]
 
         if self.counterstep != 0:
-            self.verts = np.append(self.verts, vert, axis=0)
+            self.model = np.append(self.model, matrice, axis=0)
         else:
-            self.verts = vert
+            self.model = matrice
 
-        verts_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.verts)
-        x_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
-        y_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
-        z_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
-        prg.rot_x(queue, self.verts.shape, None, verts_g, angle_x_g, x_g)
+        verts_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.model)
+        x_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.model.nbytes)
+        y_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.model.nbytes)
+        z_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.model.nbytes)
+        prg.rot_x(queue, self.model.shape, None, verts_g, angle_x_g, x_g)
 
-        cl.enqueue_copy(queue, self.verts, x_g)
+        cl.enqueue_copy(queue, self.model, x_g)
 
         self.counterstep = self.counterstep + 1
 
-        self.signal_model.emit(self.verts)
+        self.signal_model.emit(self.model)
 
-    def construct_model_platform(self, vert):
-        # ymax = np.max(vert[:, 1])
+    def construct_model_platform(self, matrice):
+        # ymax = np.max(matrice[:, 1])
 
         angle = self.angle_y * (math.pi / 180)
         print(angle)
@@ -937,37 +886,37 @@ class RealSense(QWidget):
 
         lim_z_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_z))
 
-        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=vert)
+        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=matrice)
 
-        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, vert.nbytes)
+        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, matrice.nbytes)
 
-        prg.treatment_platform(queue, vert.shape, None, vert_g, dist_center_g, lim_x_g,
+        prg.treatment_platform(queue, matrice.shape, None, vert_g, dist_center_g, lim_x_g,
                                lim_y_high_g, lim_y_low_g, lim_z_g, tr_g)
 
-        tr_np = np.empty_like(vert)
+        tr_np = np.empty_like(matrice)
 
         cl.enqueue_copy(queue, tr_np, tr_g)
 
-        vert = tr_np[~np.all(tr_np == 0., axis=1)]
+        matrice = tr_np[~np.all(tr_np == 0., axis=1)]
 
         if self.counterstep:
-            self.verts = np.append(self.verts, vert, axis=0)
+            self.model = np.append(self.model, matrice, axis=0)
         else:
-            self.verts = vert
+            self.model = matrice
 
         self.counterstep = True
 
         angle_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(angle))
-        verts_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.verts)
-        res_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.verts.nbytes)
-        prg.rot_y(queue, self.verts.shape, None, verts_g, angle_g, res_g)
+        verts_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=self.model)
+        res_g = cl.Buffer(ctx, mf.WRITE_ONLY, self.model.nbytes)
+        prg.rot_y(queue, self.model.shape, None, verts_g, angle_g, res_g)
 
-        cl.enqueue_copy(queue, self.verts, res_g)
+        cl.enqueue_copy(queue, self.model, res_g)
 
-        self.signal_model.emit(self.verts)
+        self.signal_model.emit(self.model)
 
-    def test_construct_model(self, vert):
-        ymax = np.max(vert[:, 1])
+    def test_construct_model(self, matrice):
+        ymax = np.max(matrice[:, 1])
 
         angle = self.angle_y * (math.pi / 180)
 
@@ -983,20 +932,20 @@ class RealSense(QWidget):
 
         lim_z_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=np.float32(self.lim_z))
 
-        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=vert)
+        vert_g = cl.Buffer(ctx, mf.READ_ONLY | mf.COPY_HOST_PTR, hostbuf=matrice)
 
-        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, vert.nbytes)
+        tr_g = cl.Buffer(ctx, mf.WRITE_ONLY, matrice.nbytes)
 
-        prg.treatment_platform(queue, vert.shape, None, vert_g, dist_center_g, lim_x_g,
+        prg.treatment_platform(queue, matrice.shape, None, vert_g, dist_center_g, lim_x_g,
                                lim_y_high_g, lim_y_low_g, lim_z_g, tr_g)
 
-        tr_np = np.empty_like(vert)
+        tr_np = np.empty_like(matrice)
 
         cl.enqueue_copy(queue, tr_np, tr_g)
 
-        vert = tr_np[~np.all(tr_np == 0., axis=1)]
+        matrice = tr_np[~np.all(tr_np == 0., axis=1)]
 
-        self.signal_model.emit(vert)
+        self.signal_model.emit(matrice)
 
     def set_lim_x(self, x):
         self.lim_x = x
@@ -1036,7 +985,7 @@ class RealSense(QWidget):
         self.counterstep = counter
 
     def reset_verts(self):
-        self.verts = np.array([[0, 0, 0]])
+        self.model = np.array([[0, 0, 0]])
 
 
 class GLWidget_Model(QOpenGLWidget):
@@ -1050,10 +999,13 @@ class GLWidget_Model(QOpenGLWidget):
 
         self.lastPos = QPoint()
 
-        self.vert = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
+        self.matrice = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
 
-    def set_data(self, vert):
-        self.vert = vert
+    def sizeHint(self):
+        return QSize(1280, 1280)
+
+    def set_data(self, matrice):
+        self.matrice = matrice
         self.update()
 
     def paintGL(self):
@@ -1076,8 +1028,8 @@ class GLWidget_Model(QOpenGLWidget):
 
         # display 3D model
         glEnableClientState(GL_VERTEX_ARRAY)
-        glVertexPointer(3, GL_FLOAT, 0, self.vert)
-        glDrawArrays(GL_POINTS, 0, self.vert.shape[0])
+        glVertexPointer(3, GL_FLOAT, 0, self.matrice)  #Récupération des données pour l'affichage
+        glDrawArrays(GL_POINTS, 0, self.matrice.shape[0])  #Affichage des données
         glDisableClientState(GL_VERTEX_ARRAY)
 
         glFlush()
@@ -1089,16 +1041,6 @@ class GLWidget_Model(QOpenGLWidget):
     def setYRotation(self, angle):
         self.yRot = angle
         self.update()
-        """angle = self.normalizeAngle(angle)
-        if angle != self.yRot:
-            self.yRot = angle
-            self.update()"""
-
-    def setZRotation(self, angle):
-        angle = self.normalizeAngle(angle)
-        if angle != self.zRot:
-            self.zRot = angle
-            self.update()
 
     def mousePressEvent(self, event):
         self.lastPos = event.pos()
@@ -1106,21 +1048,9 @@ class GLWidget_Model(QOpenGLWidget):
     def mouseMoveEvent(self, event):
         dx = event.x() - self.lastPos.x()
         dy = event.y() - self.lastPos.y()
-
-        if event.buttons() & Qt.LeftButton:
-            self.setXRotation(self.xRot - dx)
-            self.setYRotation(self.yRot - dy)
-        elif event.buttons() & Qt.RightButton:
-            self.setXRotation(self.xRot + dy)
-            self.setZRotation(self.zRot + dx)
-
-    def normalizeAngle(self, angle):
-        while angle < 0:
-            angle += 360
-        while angle > 360:
-            angle -= 360
-        return angle
-
+        #if event.buttons() & Qt.LeftButton:
+        self.setXRotation(self.xRot - dx)
+        self.setYRotation(self.yRot - dy)
 
 class GLWidget_Camera(QOpenGLWidget):
 
@@ -1135,11 +1065,11 @@ class GLWidget_Camera(QOpenGLWidget):
 
         self.translation = np.array([0, 0, 1], np.float32)
 
-        self.vert = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
+        self.matrice = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
         self.texture = np.random.rand(999999).astype(np.float32).reshape(333333, 3)
 
-    def set_data(self, vert, texture):
-        self.vert = vert
+    def set_data(self, matrice, texture):
+        self.matrice = matrice
         self.texture = texture
         self.update()
 
@@ -1159,9 +1089,9 @@ class GLWidget_Camera(QOpenGLWidget):
 
         glEnableClientState(GL_VERTEX_ARRAY)
         glEnableClientState(GL_COLOR_ARRAY)
-        glVertexPointer(3, GL_FLOAT, 0, self.vert)
+        glVertexPointer(3, GL_FLOAT, 0, self.matrice)
         glColorPointer(3, GL_FLOAT, 0, self.texture)
-        glDrawArrays(GL_POINTS, 0, self.vert.shape[0])
+        glDrawArrays(GL_POINTS, 0, self.matrice.shape[0])
         glDisableClientState(GL_VERTEX_ARRAY)
         glDisableClientState(GL_COLOR_ARRAY)
 
