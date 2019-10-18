@@ -17,7 +17,7 @@ CXX           = g++
 DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I../Scanner_3D -I. -I../../../../Qt/5.12.3/gcc_64/include -I../../../../Qt/5.12.3/gcc_64/include/QtWidgets -I../../../../Qt/5.12.3/gcc_64/include/QtGui -I../../../../Qt/5.12.3/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I../../../../Qt/5.12.3/gcc_64/mkspecs/linux-g++
+INCPATH       = -I../Scanner_3D -I. -isystem /usr/local/include -isystem /usr/local/include/librealsense2 -isystem /usr/local/include/librealsense2/hpp -isystem /usr/local/include/librealsense2/h -I../../../../Qt/5.12.3/gcc_64/include -I../../../../Qt/5.12.3/gcc_64/include/QtWidgets -I../../../../Qt/5.12.3/gcc_64/include/QtGui -I../../../../Qt/5.12.3/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I../../../../Qt/5.12.3/gcc_64/mkspecs/linux-g++
 QMAKE         = /home/axel/Qt/5.12.3/gcc_64/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -40,7 +40,7 @@ DISTNAME      = Scanner_3D1.0.0
 DISTDIR = /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/.tmp/Scanner_3D1.0.0
 LINK          = g++
 LFLAGS        = -Wl,-rpath,/home/axel/Qt/5.12.3/gcc_64/lib
-LIBS          = $(SUBLIBS) -L/home/axel/Qt/5.12.3/gcc_64/lib -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread   
+LIBS          = $(SUBLIBS) /usr/local/lib/librealsense2.so -L/home/axel/Qt/5.12.3/gcc_64/lib -lQt5Widgets -lQt5Gui -lQt5Core -lGL -lpthread   
 AR            = ar cqs
 RANLIB        = 
 SED           = sed
@@ -52,17 +52,13 @@ OBJECTS_DIR   = ./
 
 ####### Files
 
-SOURCES       = ../Scanner_3D/glwidget.cpp \
-		../Scanner_3D/glwidget_camera.cpp \
-		../Scanner_3D/glwidget_model.cpp \
+SOURCES       = ../Scanner_3D/glwidget_model.cpp \
 		../Scanner_3D/main.cpp \
 		../Scanner_3D/platform.cpp \
 		../Scanner_3D/realsense.cpp \
 		../Scanner_3D/window_scanner.cpp moc_platform.cpp \
 		moc_window_scanner.cpp
-OBJECTS       = glwidget.o \
-		glwidget_camera.o \
-		glwidget_model.o \
+OBJECTS       = glwidget_model.o \
 		main.o \
 		platform.o \
 		realsense.o \
@@ -242,6 +238,7 @@ DIST          = ../../../../Qt/5.12.3/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/qt_config.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/linux-g++/qmake.conf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/spec_post.prf \
+		../Scanner_3D/.qmake.stash \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/exclusive_builds.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/toolchain.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/default_pre.prf \
@@ -261,14 +258,10 @@ DIST          = ../../../../Qt/5.12.3/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/exceptions.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/yacc.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/lex.prf \
-		../Scanner_3D/Scanner_3D.pro ../Scanner_3D/glwidget.h \
-		../Scanner_3D/glwidget_camera.h \
-		../Scanner_3D/glwidget_model.h \
+		../Scanner_3D/Scanner_3D.pro ../Scanner_3D/glwidget_model.h \
 		../Scanner_3D/platform.h \
 		../Scanner_3D/realsense.h \
-		../Scanner_3D/window_scanner.h ../Scanner_3D/glwidget.cpp \
-		../Scanner_3D/glwidget_camera.cpp \
-		../Scanner_3D/glwidget_model.cpp \
+		../Scanner_3D/window_scanner.h ../Scanner_3D/glwidget_model.cpp \
 		../Scanner_3D/main.cpp \
 		../Scanner_3D/platform.cpp \
 		../Scanner_3D/realsense.cpp \
@@ -457,6 +450,7 @@ Makefile: ../Scanner_3D/Scanner_3D.pro ../../../../Qt/5.12.3/gcc_64/mkspecs/linu
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/qt_config.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/linux-g++/qmake.conf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/spec_post.prf \
+		.qmake.stash \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/exclusive_builds.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/toolchain.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/default_pre.prf \
@@ -654,6 +648,7 @@ Makefile: ../Scanner_3D/Scanner_3D.pro ../../../../Qt/5.12.3/gcc_64/mkspecs/linu
 ../../../../Qt/5.12.3/gcc_64/mkspecs/features/qt_config.prf:
 ../../../../Qt/5.12.3/gcc_64/mkspecs/linux-g++/qmake.conf:
 ../../../../Qt/5.12.3/gcc_64/mkspecs/features/spec_post.prf:
+.qmake.stash:
 ../../../../Qt/5.12.3/gcc_64/mkspecs/features/exclusive_builds.prf:
 ../../../../Qt/5.12.3/gcc_64/mkspecs/features/toolchain.prf:
 ../../../../Qt/5.12.3/gcc_64/mkspecs/features/default_pre.prf:
@@ -692,8 +687,8 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../../Qt/5.12.3/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../Scanner_3D/glwidget.h ../Scanner_3D/glwidget_camera.h ../Scanner_3D/glwidget_model.h ../Scanner_3D/platform.h ../Scanner_3D/realsense.h ../Scanner_3D/window_scanner.h $(DISTDIR)/
-	$(COPY_FILE) --parents ../Scanner_3D/glwidget.cpp ../Scanner_3D/glwidget_camera.cpp ../Scanner_3D/glwidget_model.cpp ../Scanner_3D/main.cpp ../Scanner_3D/platform.cpp ../Scanner_3D/realsense.cpp ../Scanner_3D/window_scanner.cpp $(DISTDIR)/
+	$(COPY_FILE) --parents ../Scanner_3D/glwidget_model.h ../Scanner_3D/platform.h ../Scanner_3D/realsense.h ../Scanner_3D/window_scanner.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../Scanner_3D/glwidget_model.cpp ../Scanner_3D/main.cpp ../Scanner_3D/platform.cpp ../Scanner_3D/realsense.cpp ../Scanner_3D/window_scanner.cpp $(DISTDIR)/
 
 
 clean: compiler_clean 
@@ -834,7 +829,7 @@ moc_platform.cpp: ../Scanner_3D/platform.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qtouchdevice.h \
 		moc_predefs.h \
 		../../../../Qt/5.12.3/gcc_64/bin/moc
-	/home/axel/Qt/5.12.3/gcc_64/bin/moc $(DEFINES) --include /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/moc_predefs.h -I/home/axel/Qt/5.12.3/gcc_64/mkspecs/linux-g++ -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D -I/home/axel/Qt/5.12.3/gcc_64/include -I/home/axel/Qt/5.12.3/gcc_64/include/QtWidgets -I/home/axel/Qt/5.12.3/gcc_64/include/QtGui -I/home/axel/Qt/5.12.3/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../Scanner_3D/platform.h -o moc_platform.cpp
+	/home/axel/Qt/5.12.3/gcc_64/bin/moc $(DEFINES) --include /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/moc_predefs.h -I/home/axel/Qt/5.12.3/gcc_64/mkspecs/linux-g++ -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D -I/usr/local/include -I/usr/local/include/librealsense2 -I/usr/local/include/librealsense2/hpp -I/usr/local/include/librealsense2/h -I/home/axel/Qt/5.12.3/gcc_64/include -I/home/axel/Qt/5.12.3/gcc_64/include/QtWidgets -I/home/axel/Qt/5.12.3/gcc_64/include/QtGui -I/home/axel/Qt/5.12.3/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../Scanner_3D/platform.h -o moc_platform.cpp
 
 moc_window_scanner.cpp: ../Scanner_3D/window_scanner.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QMainWindow \
@@ -1000,7 +995,8 @@ moc_window_scanner.cpp: ../Scanner_3D/window_scanner.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qtimer.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qbasictimer.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/QCloseEvent \
-		../Scanner_3D/glwidget.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/Qt \
+		../Scanner_3D/glwidget_model.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QOpenGLWidget \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qopenglwidget.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QWidget \
@@ -1010,13 +1006,11 @@ moc_window_scanner.cpp: ../Scanner_3D/window_scanner.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qt_windows.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengles2ext.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h \
-		../Scanner_3D/glwidget_camera.h \
-		../Scanner_3D/glwidget_model.h \
 		../Scanner_3D/platform.h \
 		../Scanner_3D/realsense.h \
 		moc_predefs.h \
 		../../../../Qt/5.12.3/gcc_64/bin/moc
-	/home/axel/Qt/5.12.3/gcc_64/bin/moc $(DEFINES) --include /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/moc_predefs.h -I/home/axel/Qt/5.12.3/gcc_64/mkspecs/linux-g++ -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D -I/home/axel/Qt/5.12.3/gcc_64/include -I/home/axel/Qt/5.12.3/gcc_64/include/QtWidgets -I/home/axel/Qt/5.12.3/gcc_64/include/QtGui -I/home/axel/Qt/5.12.3/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../Scanner_3D/window_scanner.h -o moc_window_scanner.cpp
+	/home/axel/Qt/5.12.3/gcc_64/bin/moc $(DEFINES) --include /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/moc_predefs.h -I/home/axel/Qt/5.12.3/gcc_64/mkspecs/linux-g++ -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D -I/usr/local/include -I/usr/local/include/librealsense2 -I/usr/local/include/librealsense2/hpp -I/usr/local/include/librealsense2/h -I/home/axel/Qt/5.12.3/gcc_64/include -I/home/axel/Qt/5.12.3/gcc_64/include/QtWidgets -I/home/axel/Qt/5.12.3/gcc_64/include/QtGui -I/home/axel/Qt/5.12.3/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../Scanner_3D/window_scanner.h -o moc_window_scanner.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -1034,7 +1028,7 @@ compiler_clean: compiler_moc_predefs_clean compiler_moc_header_clean
 
 ####### Compile
 
-glwidget.o: ../Scanner_3D/glwidget.cpp ../Scanner_3D/glwidget.h \
+glwidget_model.o: ../Scanner_3D/glwidget_model.cpp ../Scanner_3D/glwidget_model.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QOpenGLWidget \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qopenglwidget.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
@@ -1146,12 +1140,6 @@ glwidget.o: ../Scanner_3D/glwidget.cpp ../Scanner_3D/glwidget.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qt_windows.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengles2ext.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o glwidget.o ../Scanner_3D/glwidget.cpp
-
-glwidget_camera.o: ../Scanner_3D/glwidget_camera.cpp ../Scanner_3D/glwidget_camera.h
-	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o glwidget_camera.o ../Scanner_3D/glwidget_camera.cpp
-
-glwidget_model.o: ../Scanner_3D/glwidget_model.cpp ../Scanner_3D/glwidget_model.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o glwidget_model.o ../Scanner_3D/glwidget_model.cpp
 
 main.o: ../Scanner_3D/main.cpp ../Scanner_3D/window_scanner.h \
@@ -1318,7 +1306,8 @@ main.o: ../Scanner_3D/main.cpp ../Scanner_3D/window_scanner.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qtimer.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qbasictimer.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/QCloseEvent \
-		../Scanner_3D/glwidget.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/Qt \
+		../Scanner_3D/glwidget_model.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QOpenGLWidget \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qopenglwidget.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QWidget \
@@ -1328,8 +1317,6 @@ main.o: ../Scanner_3D/main.cpp ../Scanner_3D/window_scanner.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qt_windows.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengles2ext.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h \
-		../Scanner_3D/glwidget_camera.h \
-		../Scanner_3D/glwidget_model.h \
 		../Scanner_3D/platform.h \
 		../Scanner_3D/realsense.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QApplication \
@@ -1446,7 +1433,110 @@ platform.o: ../Scanner_3D/platform.cpp ../Scanner_3D/platform.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qtouchdevice.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o platform.o ../Scanner_3D/platform.cpp
 
-realsense.o: ../Scanner_3D/realsense.cpp ../Scanner_3D/realsense.h
+realsense.o: ../Scanner_3D/realsense.cpp ../Scanner_3D/realsense.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QWidget \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qwidget.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qtguiglobal.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qglobal.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qconfig-bootstrapped.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qconfig.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qtcore-config.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qsystemdetection.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qprocessordetection.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qcompilerdetection.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qtypeinfo.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qsysinfo.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qlogging.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qflags.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qatomic.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qbasicatomic.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qatomic_bootstrap.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qgenericatomic.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qatomic_cxx11.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qatomic_msvc.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qglobalstatic.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qmutex.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qnumeric.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qversiontagging.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qtgui-config.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qtwidgets-config.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qwindowdefs.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qobjectdefs.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qnamespace.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qobjectdefs_impl.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qwindowdefs_win.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qobject.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qstring.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qchar.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qbytearray.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qrefcount.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qarraydata.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qstringliteral.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qstringalgorithms.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qstringview.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qstringbuilder.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qlist.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qalgorithms.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qiterator.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qhashfunctions.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qpair.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qbytearraylist.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qstringlist.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qregexp.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qstringmatcher.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qcoreevent.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qscopedpointer.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qmetatype.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qvarlengtharray.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qcontainerfwd.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qobject_impl.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qmargins.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qpaintdevice.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qrect.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qsize.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qpoint.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qpalette.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qcolor.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qrgb.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qrgba64.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qbrush.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qvector.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qmatrix.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qpolygon.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qregion.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qdatastream.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qiodevice.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qline.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qtransform.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qpainterpath.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qimage.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qpixelformat.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qpixmap.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qsharedpointer.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qshareddata.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qhash.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qsharedpointer_impl.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qfont.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qfontmetrics.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qfontinfo.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qsizepolicy.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qcursor.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qkeysequence.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qevent.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qvariant.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qmap.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qdebug.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qtextstream.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qlocale.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qset.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qcontiguouscache.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qurl.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qurlquery.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qfile.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qfiledevice.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qvector2d.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qtouchdevice.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o realsense.o ../Scanner_3D/realsense.cpp
 
 window_scanner.o: ../Scanner_3D/window_scanner.cpp ../Scanner_3D/window_scanner.h \
@@ -1613,7 +1703,8 @@ window_scanner.o: ../Scanner_3D/window_scanner.cpp ../Scanner_3D/window_scanner.
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qtimer.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qbasictimer.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/QCloseEvent \
-		../Scanner_3D/glwidget.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/Qt \
+		../Scanner_3D/glwidget_model.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QOpenGLWidget \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qopenglwidget.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QWidget \
@@ -1623,8 +1714,6 @@ window_scanner.o: ../Scanner_3D/window_scanner.cpp ../Scanner_3D/window_scanner.
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qt_windows.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengles2ext.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h \
-		../Scanner_3D/glwidget_camera.h \
-		../Scanner_3D/glwidget_model.h \
 		../Scanner_3D/platform.h \
 		../Scanner_3D/realsense.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o window_scanner.o ../Scanner_3D/window_scanner.cpp

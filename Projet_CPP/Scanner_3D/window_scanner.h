@@ -24,8 +24,6 @@
 #include <QLayout>
 #include <Qt>
 
-#include <glwidget.h>
-#include <glwidget_camera.h>
 #include <glwidget_model.h>
 #include <platform.h>
 #include <realsense.h>
@@ -89,8 +87,6 @@ private:
     QComboBox *m_list_resolution = new QComboBox(this);
     QComboBox *m_list_mode = new QComboBox(this);
 
-    GLWidget *m_glwidget = new GLWidget();
-    GLWidget_Camera *m_glwidget_Camera = new GLWidget_Camera();
     GLWidget_Model *m_glwidget_Model = new GLWidget_Model();
     QWidget *m_camera_view_widget = new QWidget(this);
     QWidget *m_model_view_widget = new QWidget(this);

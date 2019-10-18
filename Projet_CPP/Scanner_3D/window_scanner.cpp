@@ -252,27 +252,6 @@ void Window_Scanner::layout_mode_test()
     m_mode_test_platform->setLayout(layout);
 }
 
-void Window_Scanner::layout_logo_qt()
-{
-    QHBoxLayout *layout = new QHBoxLayout();
-    layout->addWidget(m_glwidget);
-    m_logo_qt_widget->setLayout(layout);
-}
-
-void Window_Scanner::layout_camera_view()
-{
-    QHBoxLayout *layout = new QHBoxLayout();
-    layout->addWidget(m_glwidget_Camera);
-    m_camera_view_widget->setLayout(layout);
-}
-
-void Window_Scanner::layout_model_view()
-{
-    QHBoxLayout *layout = new QHBoxLayout();
-    layout->addWidget(m_glwidget_Model);
-    m_model_view_widget->setLayout(layout);
-}
-
 void Window_Scanner::init_rs()
 {
 
