@@ -23,6 +23,7 @@ from math import pi
 import pyrealsense2 as rs
 import serial
 from serial.tools.list_ports import comports
+import os
 
 """
 
@@ -91,7 +92,7 @@ prg = cl.Program(ctx, """
         int i = (get_global_id(0) * 2) + get_global_id(0);
         if(point[i] < limit_x && point[i] > -(limit_x)){
             if(point[i+1] < (limit_y) && point[i+1] > -(limit_y)){
-                if(point[i+2] > -(limit_z)){
+                if(point[i+2] < (limit_z)){
                     point_prime[i] = point[i];
                     point_prime[i+1] = point[i+1];
                     point_prime[i+2] = point[i+2];
@@ -135,6 +136,8 @@ class Window(QWidget):
     def __init__(self):
         super(Window, self).__init__()
 
+        self.disable_choice_format()
+
         self.connect_rs: bool
         self.connect_rs = False
 
@@ -170,7 +173,6 @@ class Window(QWidget):
         self.glWidget_Model = GLWidget_Model()
         self.glWidget_Model.sizeHint()
 
-        self.xyz = QCheckBox("xyz", self)
         self.pcd = QCheckBox("pcd", self)
         self.obj = QCheckBox("obj", self)
         self.stl = QCheckBox("stl", self)
@@ -253,9 +255,9 @@ class Window(QWidget):
 
         self.SPB_lim_y_low2 = QDoubleSpinBox()
         self.SPB_lim_y_low2.setRange(0, 2)
-        self.SPB_lim_y_low.setValue(0.5)
+        self.SPB_lim_y_low2.setValue(0.5)
         self.SPB_lim_y_low2.setDecimals(5)
-        self.SPB_lim_y_low2.setDecimals(0.01)
+        self.SPB_lim_y_low2.setSingleStep(0.01)
         self.SPB_lim_y_low2.valueChanged.connect(self.rs.set_lim_y_low)
         self.SPB_lim_y_low2.valueChanged.connect(self.SPB_lim_y_low.setValue)
 
@@ -354,7 +356,6 @@ class Window(QWidget):
         self.stacked_mode.addWidget(self.mode_test_platform_widget)
 
         fourLayout = QVBoxLayout()
-        fourLayout.addWidget(self.xyz)
         fourLayout.addWidget(self.pcd)
         fourLayout.addWidget(self.obj)
         fourLayout.addWidget(self.stl)
@@ -406,7 +407,6 @@ class Window(QWidget):
         layout = QVBoxLayout()
         # layout.setGeometry(50, 50, 200, 200)
         layout_lim = QFormLayout()
-        # layout_lim.addRow("Limite X", self.SPB_lim_x)
         layout_lim.addRow("Angle Rotation", self.SPB_angle)
         layout_lim.addRow("Limite Y Haut", self.SPB_lim_y_high)
         layout_lim.addRow("Limite Y Bas", self.SPB_lim_y_low)
@@ -425,11 +425,9 @@ class Window(QWidget):
         self.mode_platform_widget.setLayout(layout)
 
     def layout_mode_test_platform(self):
-
         layout = QVBoxLayout()
         # layout.setGeometry(50, 50, 200, 200)
         layout_lim = QFormLayout()
-        # layout_lim.addRow("Limite X", self.SPB_lim_x)
         layout_lim.addRow("Angle Rotation", self.SPB_angle2)
         layout_lim.addRow("Limite Y Haut", self.SPB_lim_y_high2)
         layout_lim.addRow("Limite Y Bas", self.SPB_lim_y_low2)
@@ -441,19 +439,6 @@ class Window(QWidget):
         layout.addLayout(layout_lim)
         layout.addLayout(layout_button)
         self.mode_test_platform_widget.setLayout(layout)
-
-    """def layout_mode_test_mobile(self):
-        layout = QVBoxLayout()
-        # layout.setGeometry(50, 50, 200, 200)
-        layout_lim = QFormLayout()
-        layout_lim.addRow("Limite X", self.SPB_lim_x3)
-        layout_lim.addRow("Limite Y", self.SPB_lim_y3)
-        layout_lim.addRow("Limite Z", self.SPB_lim_z3)
-        layout_button = QHBoxLayout()
-        layout_button.addWidget(self.start_test)
-        layout.addLayout(layout_lim)
-        layout.addLayout(layout_button)
-        self.mode_test_mobile_widget.setLayout(layout)"""
 
     def init_rs(self):
         try:
@@ -477,7 +462,6 @@ class Window(QWidget):
 
     def click_scan_platform(self):
         if self.connect_rs == True and self.platform.port != 0:
-            self.choose_view(1)
             self.disabled_to_scan()
             self.out = 10
             self.rs.set_mode_platform()
@@ -494,7 +478,6 @@ class Window(QWidget):
 
     def click_scan_mobile(self):
         if self.connect_rs:
-            self.choose_view(1)
             self.disabled_to_scan()
             self.rs.set_mode_mobile()
             if self.timer.isActive():
@@ -508,7 +491,6 @@ class Window(QWidget):
 
     def click_scan_test(self):
         if self.connect_rs:
-            self.choose_view(1)
             self.disabled_to_scan()
             self.rs.set_mode_test()
             if self.timer.isActive():
@@ -523,6 +505,8 @@ class Window(QWidget):
     def click_stop_scan(self):
         self.timer.stop()
         self.timer.disconnect()
+        self.list_resolution.setDisabled(False)
+        self.list_mode.setDisabled(False)
 
     def scan_platform(self):
         if self.out != '':
@@ -565,32 +549,77 @@ class Window(QWidget):
         self.stacked_mode.setCurrentIndex(i)
 
     def save_file(self):  ##A FINIR
-        self.name = self.filename.displayText()
+        self.disable_choice_format()
         if self.name[0] and self.filepath[0]:
-            if self.xyz.isChecked():
-                pass
             if self.pcd.isChecked():
-                pass
+                self.pcd_checked = True
             if self.obj.isChecked():
-                pass
+                self.obj_checked = True
             if self.ply.isChecked():
-                pass
+                self.ply_checked = True
             if self.stl.isChecked():
-                pass
+                self.stl_checked = True
             if self.vtk.isChecked():
-                pass
+                self.vtk_checked = True
+        self.create_pcd()
+        self.convert_format()
         else:
             QMessageBox.information(self, "Attention problème lors de la sauvegarde",
                                     "Veuillez donner un nom aux fichiers ainsi que le chemin pour la sauvegarde",
                                     QMessageBox.Ok,
                                     QMessageBox.Ok)
 
+    def convert_format(self):
+        if self.obj_checked:
+            cmd = './pcl_converter ' + self.filename.displayText() + '.pcd ' + self.filename.displayText() + '.obj'
+            os.popen(cmd)
+        if self.ply_checked:
+            cmd = './pcl_converter ' + self.filename.displayText() + '.pcd ' + self.filename.displayText() + '.ply'
+            os.popen(cmd)
+        if self.stl_checked:
+            cmd = './pcl_converter ' + self.filename.displayText() + '.pcd ' + self.filename.displayText() + '.stl'
+            os.popen(cmd)
+        if self.vtk_checked:
+            cmd = './pcl_converter ' + self.filename.displayText() + '.pcd ' + self.filename.displayText() + '.vtk'
+            os.popen(cmd)
+
+    def disable_choice_format(self):
+        self.pcd_checked = False
+        self.obj_checked = False
+        self.ply_checked = False
+        self.stl_checked = False
+        self.vtk_checked = False
+
+    def create_pcd(self):
+        name = self.filename.displayText()
+        file = open(name, "w")
+        file.write("")
+        file.close()
+
+        file = open(name, "a")
+        mot = ("# .PCD v0.7 - Point Cloud Data file format \n" +
+               "FIELDS x y z\n" +
+               "SIZE 4 4 4\n" +
+               "TYPE F F F\n" +
+               "COUNT 1 1 1\n" +
+               "WIDTH " + str(self.rs.model.shape) + "\n" +
+               "HEIGHT 1\n" +
+               "VIEWPOINT 0 0 0 1 0 0 0\n" +
+               "POINTS " + str(self.rs.model.shape) + "\n" +
+               "DATA ascii\n")
+        file.write(mot)
+        while i < self.rs.model.shape:
+            file.write(self.rs.model[i])
+            i = i + 1
+
+        file.close()
+
     def init_platform(self):
         self.platform.ports()
 
     def disabled_to_scan(self):
-        self.list_view.setDisabled(True)
         self.list_resolution.setDisabled(True)
+        self.list_mode.setDisabled(True)
 
 
 class Platform(QWidget):
@@ -635,7 +664,6 @@ class Platform(QWidget):
     def read(self):
         out = self.ser.read()
         out = out.decode()
-        print(out)
         return out
 
     def write(self):
@@ -711,6 +739,9 @@ class RealSense(QWidget):
                         rs.disparity_transform(False)]
 
     def recovery_data_model(self):
+        starttime = time()
+        while time() - starttime != 1:
+            continue
         points = rs.points()
 
         success, frames = self.pipeline.try_wait_for_frames(timeout_ms=0)  # récupération des images
@@ -776,7 +807,6 @@ class RealSense(QWidget):
         # ymax = np.max(matrice[:, 1])
 
         angle = self.angle_y * (math.pi / 180)
-        print(angle)
 
         self.lim_x = self.dist_center * math.tan(math.radians(self.angle_y))
 
@@ -820,6 +850,7 @@ class RealSense(QWidget):
         self.signal_model.emit(self.model)
 
     def test_construct_model(self, matrice):
+        print(matrice)
         ymax = np.max(matrice[:, 1])
 
         angle = self.angle_y * (math.pi / 180)
@@ -848,6 +879,8 @@ class RealSense(QWidget):
         cl.enqueue_copy(queue, tr_np, tr_g)
 
         matrice = tr_np[~np.all(tr_np == 0., axis=1)]
+
+        print(matrice)
 
         self.signal_model.emit(matrice)
 
