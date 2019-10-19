@@ -561,8 +561,8 @@ class Window(QWidget):
                 self.stl_checked = True
             if self.vtk.isChecked():
                 self.vtk_checked = True
-        self.create_pcd()
-        self.convert_format()
+            self.create_pcd()
+            self.convert_format()
         else:
             QMessageBox.information(self, "Attention problème lors de la sauvegarde",
                                     "Veuillez donner un nom aux fichiers ainsi que le chemin pour la sauvegarde",
