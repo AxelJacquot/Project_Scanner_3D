@@ -33,9 +33,8 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-INCLUDEPATH += /usr/local/include \
-                /usr/local/include/librealsense2 \
-                /usr/local/include/librealsense2/hpp \
-                /usr/local/include/librealsense2/h
+INCLUDEPATH += ./include/librealsense2 \
+               ./include/librealsense2/hpp \
+               ./include/librealsense2/h \
 
 LIBS += /usr/local/lib/librealsense2.so #pc

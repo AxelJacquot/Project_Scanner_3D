@@ -17,7 +17,7 @@ CXX           = g++
 DEFINES       = -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_WIDGETS_LIB -DQT_GUI_LIB -DQT_CORE_LIB
 CFLAGS        = -pipe -g -Wall -W -D_REENTRANT -fPIC $(DEFINES)
 CXXFLAGS      = -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC $(DEFINES)
-INCPATH       = -I../Scanner_3D -I. -isystem /usr/local/include -isystem /usr/local/include/librealsense2 -isystem /usr/local/include/librealsense2/hpp -isystem /usr/local/include/librealsense2/h -I../../../../Qt/5.12.3/gcc_64/include -I../../../../Qt/5.12.3/gcc_64/include/QtWidgets -I../../../../Qt/5.12.3/gcc_64/include/QtGui -I../../../../Qt/5.12.3/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I../../../../Qt/5.12.3/gcc_64/mkspecs/linux-g++
+INCPATH       = -I../Scanner_3D -I. -I../Scanner_3D/include/librealsense2 -I../Scanner_3D/include/librealsense2/hpp -I../Scanner_3D/include/librealsense2/h -I../../../../Qt/5.12.3/gcc_64/include -I../../../../Qt/5.12.3/gcc_64/include/QtWidgets -I../../../../Qt/5.12.3/gcc_64/include/QtGui -I../../../../Qt/5.12.3/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I../../../../Qt/5.12.3/gcc_64/mkspecs/linux-g++
 QMAKE         = /home/axel/Qt/5.12.3/gcc_64/bin/qmake
 DEL_FILE      = rm -f
 CHK_DIR_EXISTS= test -d
@@ -829,7 +829,7 @@ moc_platform.cpp: ../Scanner_3D/platform.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qtouchdevice.h \
 		moc_predefs.h \
 		../../../../Qt/5.12.3/gcc_64/bin/moc
-	/home/axel/Qt/5.12.3/gcc_64/bin/moc $(DEFINES) --include /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/moc_predefs.h -I/home/axel/Qt/5.12.3/gcc_64/mkspecs/linux-g++ -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D -I/usr/local/include -I/usr/local/include/librealsense2 -I/usr/local/include/librealsense2/hpp -I/usr/local/include/librealsense2/h -I/home/axel/Qt/5.12.3/gcc_64/include -I/home/axel/Qt/5.12.3/gcc_64/include/QtWidgets -I/home/axel/Qt/5.12.3/gcc_64/include/QtGui -I/home/axel/Qt/5.12.3/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../Scanner_3D/platform.h -o moc_platform.cpp
+	/home/axel/Qt/5.12.3/gcc_64/bin/moc $(DEFINES) --include /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/moc_predefs.h -I/home/axel/Qt/5.12.3/gcc_64/mkspecs/linux-g++ -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D/include/librealsense2 -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D/include/librealsense2/hpp -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D/include/librealsense2/h -I/home/axel/Qt/5.12.3/gcc_64/include -I/home/axel/Qt/5.12.3/gcc_64/include/QtWidgets -I/home/axel/Qt/5.12.3/gcc_64/include/QtGui -I/home/axel/Qt/5.12.3/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../Scanner_3D/platform.h -o moc_platform.cpp
 
 moc_window_scanner.cpp: ../Scanner_3D/window_scanner.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QMainWindow \
@@ -1006,11 +1006,38 @@ moc_window_scanner.cpp: ../Scanner_3D/window_scanner.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qt_windows.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengles2ext.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/QSize \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/QMouseEvent \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QMouseEventTransition \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qmouseeventtransition.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qeventtransition.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qabstracttransition.h \
 		../Scanner_3D/platform.h \
 		../Scanner_3D/realsense.h \
+		../Scanner_3D/include/librealsense2/rs.hpp \
+		../Scanner_3D/include/librealsense2/rs.h \
+		../Scanner_3D/include/librealsense2/h/rs_types.h \
+		../Scanner_3D/include/librealsense2/h/rs_context.h \
+		../Scanner_3D/include/librealsense2/h/rs_device.h \
+		../Scanner_3D/include/librealsense2/h/rs_sensor.h \
+		../Scanner_3D/include/librealsense2/h/rs_frame.h \
+		../Scanner_3D/include/librealsense2/h/rs_option.h \
+		../Scanner_3D/include/librealsense2/h/rs_processing.h \
+		../Scanner_3D/include/librealsense2/h/rs_record_playback.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_types.hpp \
+		../Scanner_3D/include/librealsense2/h/rs_pipeline.h \
+		../Scanner_3D/include/librealsense2/h/rs_config.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_context.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_record_playback.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_device.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_sensor.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_frame.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_processing.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_options.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_pipeline.hpp \
 		moc_predefs.h \
 		../../../../Qt/5.12.3/gcc_64/bin/moc
-	/home/axel/Qt/5.12.3/gcc_64/bin/moc $(DEFINES) --include /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/moc_predefs.h -I/home/axel/Qt/5.12.3/gcc_64/mkspecs/linux-g++ -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D -I/usr/local/include -I/usr/local/include/librealsense2 -I/usr/local/include/librealsense2/hpp -I/usr/local/include/librealsense2/h -I/home/axel/Qt/5.12.3/gcc_64/include -I/home/axel/Qt/5.12.3/gcc_64/include/QtWidgets -I/home/axel/Qt/5.12.3/gcc_64/include/QtGui -I/home/axel/Qt/5.12.3/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../Scanner_3D/window_scanner.h -o moc_window_scanner.cpp
+	/home/axel/Qt/5.12.3/gcc_64/bin/moc $(DEFINES) --include /home/axel/git/Project_Scanner_3D/Projet_CPP/build-Scanner_3D-Desktop_Qt_5_12_3_GCC_64bit-Debug/moc_predefs.h -I/home/axel/Qt/5.12.3/gcc_64/mkspecs/linux-g++ -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D/include/librealsense2 -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D/include/librealsense2/hpp -I/home/axel/git/Project_Scanner_3D/Projet_CPP/Scanner_3D/include/librealsense2/h -I/home/axel/Qt/5.12.3/gcc_64/include -I/home/axel/Qt/5.12.3/gcc_64/include/QtWidgets -I/home/axel/Qt/5.12.3/gcc_64/include/QtGui -I/home/axel/Qt/5.12.3/gcc_64/include/QtCore -I. -I/usr/include/c++/7 -I/usr/include/x86_64-linux-gnu/c++/7 -I/usr/include/c++/7/backward -I/usr/lib/gcc/x86_64-linux-gnu/7/include -I/usr/local/include -I/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed -I/usr/include/x86_64-linux-gnu -I/usr/include ../Scanner_3D/window_scanner.h -o moc_window_scanner.cpp
 
 compiler_moc_objc_header_make_all:
 compiler_moc_objc_header_clean:
@@ -1139,7 +1166,13 @@ glwidget_model.o: ../Scanner_3D/glwidget_model.cpp ../Scanner_3D/glwidget_model.
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengl.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qt_windows.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengles2ext.h \
-		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/QSize \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/QMouseEvent \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QMouseEventTransition \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qmouseeventtransition.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qeventtransition.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qabstracttransition.h
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o glwidget_model.o ../Scanner_3D/glwidget_model.cpp
 
 main.o: ../Scanner_3D/main.cpp ../Scanner_3D/window_scanner.h \
@@ -1317,8 +1350,35 @@ main.o: ../Scanner_3D/main.cpp ../Scanner_3D/window_scanner.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qt_windows.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengles2ext.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/QSize \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/QMouseEvent \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QMouseEventTransition \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qmouseeventtransition.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qeventtransition.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qabstracttransition.h \
 		../Scanner_3D/platform.h \
 		../Scanner_3D/realsense.h \
+		../Scanner_3D/include/librealsense2/rs.hpp \
+		../Scanner_3D/include/librealsense2/rs.h \
+		../Scanner_3D/include/librealsense2/h/rs_types.h \
+		../Scanner_3D/include/librealsense2/h/rs_context.h \
+		../Scanner_3D/include/librealsense2/h/rs_device.h \
+		../Scanner_3D/include/librealsense2/h/rs_sensor.h \
+		../Scanner_3D/include/librealsense2/h/rs_frame.h \
+		../Scanner_3D/include/librealsense2/h/rs_option.h \
+		../Scanner_3D/include/librealsense2/h/rs_processing.h \
+		../Scanner_3D/include/librealsense2/h/rs_record_playback.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_types.hpp \
+		../Scanner_3D/include/librealsense2/h/rs_pipeline.h \
+		../Scanner_3D/include/librealsense2/h/rs_config.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_context.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_record_playback.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_device.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_sensor.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_frame.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_processing.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_options.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_pipeline.hpp \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QApplication \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qapplication.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qcoreapplication.h \
@@ -1434,6 +1494,27 @@ platform.o: ../Scanner_3D/platform.cpp ../Scanner_3D/platform.h \
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o platform.o ../Scanner_3D/platform.cpp
 
 realsense.o: ../Scanner_3D/realsense.cpp ../Scanner_3D/realsense.h \
+		../Scanner_3D/include/librealsense2/rs.hpp \
+		../Scanner_3D/include/librealsense2/rs.h \
+		../Scanner_3D/include/librealsense2/h/rs_types.h \
+		../Scanner_3D/include/librealsense2/h/rs_context.h \
+		../Scanner_3D/include/librealsense2/h/rs_device.h \
+		../Scanner_3D/include/librealsense2/h/rs_sensor.h \
+		../Scanner_3D/include/librealsense2/h/rs_frame.h \
+		../Scanner_3D/include/librealsense2/h/rs_option.h \
+		../Scanner_3D/include/librealsense2/h/rs_processing.h \
+		../Scanner_3D/include/librealsense2/h/rs_record_playback.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_types.hpp \
+		../Scanner_3D/include/librealsense2/h/rs_pipeline.h \
+		../Scanner_3D/include/librealsense2/h/rs_config.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_context.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_record_playback.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_device.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_sensor.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_frame.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_processing.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_options.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_pipeline.hpp \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QWidget \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qwidget.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qtwidgetsglobal.h \
@@ -1714,8 +1795,35 @@ window_scanner.o: ../Scanner_3D/window_scanner.cpp ../Scanner_3D/window_scanner.
 		../../../../Qt/5.12.3/gcc_64/include/QtCore/qt_windows.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopengles2ext.h \
 		../../../../Qt/5.12.3/gcc_64/include/QtGui/qopenglext.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/QSize \
+		../../../../Qt/5.12.3/gcc_64/include/QtGui/QMouseEvent \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/QMouseEventTransition \
+		../../../../Qt/5.12.3/gcc_64/include/QtWidgets/qmouseeventtransition.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qeventtransition.h \
+		../../../../Qt/5.12.3/gcc_64/include/QtCore/qabstracttransition.h \
 		../Scanner_3D/platform.h \
-		../Scanner_3D/realsense.h
+		../Scanner_3D/realsense.h \
+		../Scanner_3D/include/librealsense2/rs.hpp \
+		../Scanner_3D/include/librealsense2/rs.h \
+		../Scanner_3D/include/librealsense2/h/rs_types.h \
+		../Scanner_3D/include/librealsense2/h/rs_context.h \
+		../Scanner_3D/include/librealsense2/h/rs_device.h \
+		../Scanner_3D/include/librealsense2/h/rs_sensor.h \
+		../Scanner_3D/include/librealsense2/h/rs_frame.h \
+		../Scanner_3D/include/librealsense2/h/rs_option.h \
+		../Scanner_3D/include/librealsense2/h/rs_processing.h \
+		../Scanner_3D/include/librealsense2/h/rs_record_playback.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_types.hpp \
+		../Scanner_3D/include/librealsense2/h/rs_pipeline.h \
+		../Scanner_3D/include/librealsense2/h/rs_config.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_context.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_record_playback.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_device.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_sensor.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_frame.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_processing.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_options.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_pipeline.hpp
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o window_scanner.o ../Scanner_3D/window_scanner.cpp
 
 moc_platform.o: moc_platform.cpp 

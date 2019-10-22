@@ -2,7 +2,7 @@
 #define REALSENSE_H
 
 //#include <librealsense2/rs.h>
-#include <rs.hpp>
+#include "include/librealsense2/rs.hpp"
 #include <QWidget>
 
 class RealSense
