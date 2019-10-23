@@ -259,6 +259,34 @@ DIST          = ../../../../Qt/5.12.3/gcc_64/mkspecs/features/spec_pre.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/yacc.prf \
 		../../../../Qt/5.12.3/gcc_64/mkspecs/features/lex.prf \
 		../Scanner_3D/Scanner_3D.pro ../Scanner_3D/glwidget_model.h \
+		../Scanner_3D/include/librealsense2/h/rs_advanced_mode_command.h \
+		../Scanner_3D/include/librealsense2/h/rs_config.h \
+		../Scanner_3D/include/librealsense2/h/rs_context.h \
+		../Scanner_3D/include/librealsense2/h/rs_device.h \
+		../Scanner_3D/include/librealsense2/h/rs_frame.h \
+		../Scanner_3D/include/librealsense2/h/rs_internal.h \
+		../Scanner_3D/include/librealsense2/h/rs_option.h \
+		../Scanner_3D/include/librealsense2/h/rs_pipeline.h \
+		../Scanner_3D/include/librealsense2/h/rs_processing.h \
+		../Scanner_3D/include/librealsense2/h/rs_record_playback.h \
+		../Scanner_3D/include/librealsense2/h/rs_sensor.h \
+		../Scanner_3D/include/librealsense2/h/rs_types.h \
+		../Scanner_3D/include/librealsense2/hpp/rs_context.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_device.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_export.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_frame.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_internal.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_options.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_pipeline.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_processing.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_record_playback.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_sensor.hpp \
+		../Scanner_3D/include/librealsense2/hpp/rs_types.hpp \
+		../Scanner_3D/include/librealsense2/rs.h \
+		../Scanner_3D/include/librealsense2/rs.hpp \
+		../Scanner_3D/include/librealsense2/rs_advanced_mode.h \
+		../Scanner_3D/include/librealsense2/rs_advanced_mode.hpp \
+		../Scanner_3D/include/librealsense2/rsutil.h \
 		../Scanner_3D/platform.h \
 		../Scanner_3D/realsense.h \
 		../Scanner_3D/window_scanner.h ../Scanner_3D/glwidget_model.cpp \
@@ -687,7 +715,7 @@ distdir: FORCE
 	@test -d $(DISTDIR) || mkdir -p $(DISTDIR)
 	$(COPY_FILE) --parents $(DIST) $(DISTDIR)/
 	$(COPY_FILE) --parents ../../../../Qt/5.12.3/gcc_64/mkspecs/features/data/dummy.cpp $(DISTDIR)/
-	$(COPY_FILE) --parents ../Scanner_3D/glwidget_model.h ../Scanner_3D/platform.h ../Scanner_3D/realsense.h ../Scanner_3D/window_scanner.h $(DISTDIR)/
+	$(COPY_FILE) --parents ../Scanner_3D/glwidget_model.h ../Scanner_3D/include/librealsense2/h/rs_advanced_mode_command.h ../Scanner_3D/include/librealsense2/h/rs_config.h ../Scanner_3D/include/librealsense2/h/rs_context.h ../Scanner_3D/include/librealsense2/h/rs_device.h ../Scanner_3D/include/librealsense2/h/rs_frame.h ../Scanner_3D/include/librealsense2/h/rs_internal.h ../Scanner_3D/include/librealsense2/h/rs_option.h ../Scanner_3D/include/librealsense2/h/rs_pipeline.h ../Scanner_3D/include/librealsense2/h/rs_processing.h ../Scanner_3D/include/librealsense2/h/rs_record_playback.h ../Scanner_3D/include/librealsense2/h/rs_sensor.h ../Scanner_3D/include/librealsense2/h/rs_types.h ../Scanner_3D/include/librealsense2/hpp/rs_context.hpp ../Scanner_3D/include/librealsense2/hpp/rs_device.hpp ../Scanner_3D/include/librealsense2/hpp/rs_export.hpp ../Scanner_3D/include/librealsense2/hpp/rs_frame.hpp ../Scanner_3D/include/librealsense2/hpp/rs_internal.hpp ../Scanner_3D/include/librealsense2/hpp/rs_options.hpp ../Scanner_3D/include/librealsense2/hpp/rs_pipeline.hpp ../Scanner_3D/include/librealsense2/hpp/rs_processing.hpp ../Scanner_3D/include/librealsense2/hpp/rs_record_playback.hpp ../Scanner_3D/include/librealsense2/hpp/rs_sensor.hpp ../Scanner_3D/include/librealsense2/hpp/rs_types.hpp ../Scanner_3D/include/librealsense2/rs.h ../Scanner_3D/include/librealsense2/rs.hpp ../Scanner_3D/include/librealsense2/rs_advanced_mode.h ../Scanner_3D/include/librealsense2/rs_advanced_mode.hpp ../Scanner_3D/include/librealsense2/rsutil.h ../Scanner_3D/platform.h ../Scanner_3D/realsense.h ../Scanner_3D/window_scanner.h $(DISTDIR)/
 	$(COPY_FILE) --parents ../Scanner_3D/glwidget_model.cpp ../Scanner_3D/main.cpp ../Scanner_3D/platform.cpp ../Scanner_3D/realsense.cpp ../Scanner_3D/window_scanner.cpp $(DISTDIR)/
 
 

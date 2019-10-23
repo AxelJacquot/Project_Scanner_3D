@@ -79,7 +79,7 @@ private:
     QString m_out = "";
     QString m_port = "";
 
-    RealSense m_rs;
+    RealSense *m_rs = new RealSense();
 
     QTimer m_timer;
 

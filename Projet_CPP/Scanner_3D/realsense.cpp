@@ -1,4 +1,5 @@
 #include "realsense.h"
+#include <iostream>
 
 RealSense::RealSense()
 {
@@ -43,6 +44,9 @@ void RealSense::recovery_platform_data_model()
 
     points = rs2::pointcloud().calculate(depth_frame);
 
+    auto data = points.get_vertices();
+
+    std::cout << data << std::endl;
 
 }
 

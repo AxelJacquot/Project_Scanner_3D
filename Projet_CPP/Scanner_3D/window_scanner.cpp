@@ -30,6 +30,9 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     m_button_path->setMaximumWidth(150);
     connect(m_button_path, SIGNAL(clicked()), this, SLOT(recover_path()));
 
+    m_button_rs->setMaximumWidth(150);
+    connect(m_button_rs, SIGNAL(clicked()), this, SLOT(init_rs()));
+
     m_stacked_gl->addWidget(m_logo_qt_widget);
     m_stacked_gl->addWidget(m_model_view_widget);
     m_stacked_gl->addWidget(m_camera_view_widget);
@@ -68,9 +71,6 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     m_button_save->setMaximumWidth(150);
     connect(m_button_save, SIGNAL(clicked()), this, SLOT(save_file()));
 
-    m_button_rs->setMaximumWidth(150);
-    connect(m_button_rs, SIGNAL(clicked()), this, SLOT(init_rs()));
-
     m_button_platform->setMaximumWidth(150);
     connect(m_button_platform, SIGNAL(clicked()), this, SLOT(init_platform()));
 
@@ -107,9 +107,6 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     m_angle2->setDecimals(4);
     m_angle2->setSingleStep(0.1);
 
-    m_button_rs2->setMaximumWidth(150);
-    connect(m_button_rs2, SIGNAL(clicked()), this, SLOT(init_rs()));
-
     m_button_test->setMaximumWidth(150);
     connect(m_button_test, SIGNAL(clicked()), this, SLOT(click_scan_test()));
 
@@ -132,9 +129,6 @@ Window_Scanner::Window_Scanner(QWidget *parent)
 
     m_button_save2->setMaximumWidth(150);
     connect(m_button_save2, SIGNAL(clicked()), this, SLOT(save_file()));
-
-    m_button_rs3->setMaximumWidth(150);
-    connect(m_button_rs3, SIGNAL(clicked()), this, SLOT(init_rs()));
 
     m_button_start_scan2->setMaximumWidth(150);
     connect(m_button_start_scan2, SIGNAL(clicked()), this, SLOT(click_scan_mobile()));
@@ -171,6 +165,7 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     m_layout_choice->addRow("Choice 3D Format", m_layout_box);
     m_layout_choice->addRow("File Name", m_filename);
     m_layout_choice->addRow("Path Save", m_button_path);
+    m_layout_choice->addRow("Connect Camera", m_button_rs);
     m_layout_choice->addRow("Mode Choice", m_list_mode);
 
     m_layout_button->addWidget(m_button_Close);
@@ -203,8 +198,8 @@ void Window_Scanner::layout_mode_mobile()
     layout_lim->addRow("Limite Y", m_lim_y3);
     layout_lim->addRow("Limite Z", m_lim_z3);
     QHBoxLayout *layout_button = new QHBoxLayout();
-    layout_button->addWidget(m_button_rs3);
     layout_button->addWidget(m_button_start_scan2);
+    layout_button->addWidget(m_button_stop_scan2);
     layout_button->addWidget(m_button_save2);
     layout->addLayout(layout_lim);
     layout->addLayout(layout_button);
@@ -224,9 +219,8 @@ void Window_Scanner::layout_mode_platform()
     layout_lim->addRow("Limite Z", m_lim_z);
     layout_lim->addRow("Center Distance", m_dist_center);
     layout_lim->addRow("Progress", m_progress);
-    layout_button1->addWidget(m_button_rs);
     layout_button1->addWidget(m_button_platform);
-    layout_button2->addWidget(m_button_start_scan);
+    layout_button1->addWidget(m_button_start_scan);
     layout_button2->addWidget(m_button_save);
     layout_button2->addWidget(m_button_stop_scan);
     layout->addLayout(layout_lim);
@@ -245,7 +239,6 @@ void Window_Scanner::layout_mode_test()
     layout_lim->addRow("Limite Y Low", m_lim_y_low_2);
     layout_lim->addRow("Limite Z", m_lim_z2);
     layout_lim->addRow("Center Distance", m_dist_center2);
-    layout_button1->addWidget(m_button_rs2);
     layout_button1->addWidget(m_button_test);
     layout->addLayout(layout_lim);
     layout->addLayout(layout_button1);
@@ -254,7 +247,7 @@ void Window_Scanner::layout_mode_test()
 
 void Window_Scanner::init_rs()
 {
-
+    m_rs->init_realsense();
 }
 
 void Window_Scanner::recover_path()
@@ -269,7 +262,7 @@ void Window_Scanner::stream()
 
 void Window_Scanner::click_scan_platform()
 {
-
+    m_rs->recovery_platform_data_model();
 }
 
 void Window_Scanner::click_scan_mobile()
@@ -304,12 +297,12 @@ void Window_Scanner::closeEvent(QCloseEvent event)
 
 void Window_Scanner::choose_view(int i)
 {
-    i++;
+
 }
 
 void Window_Scanner::choose_resolution(int i)
 {
-    i++;
+
 }
 
 void Window_Scanner::choose_mode(int i)

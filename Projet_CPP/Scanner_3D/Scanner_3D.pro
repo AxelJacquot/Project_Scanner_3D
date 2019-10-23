@@ -24,6 +24,34 @@ SOURCES += \
 
 HEADERS += \
     glwidget_model.h \
+    include/librealsense2/h/rs_advanced_mode_command.h \
+    include/librealsense2/h/rs_config.h \
+    include/librealsense2/h/rs_context.h \
+    include/librealsense2/h/rs_device.h \
+    include/librealsense2/h/rs_frame.h \
+    include/librealsense2/h/rs_internal.h \
+    include/librealsense2/h/rs_option.h \
+    include/librealsense2/h/rs_pipeline.h \
+    include/librealsense2/h/rs_processing.h \
+    include/librealsense2/h/rs_record_playback.h \
+    include/librealsense2/h/rs_sensor.h \
+    include/librealsense2/h/rs_types.h \
+    include/librealsense2/hpp/rs_context.hpp \
+    include/librealsense2/hpp/rs_device.hpp \
+    include/librealsense2/hpp/rs_export.hpp \
+    include/librealsense2/hpp/rs_frame.hpp \
+    include/librealsense2/hpp/rs_internal.hpp \
+    include/librealsense2/hpp/rs_options.hpp \
+    include/librealsense2/hpp/rs_pipeline.hpp \
+    include/librealsense2/hpp/rs_processing.hpp \
+    include/librealsense2/hpp/rs_record_playback.hpp \
+    include/librealsense2/hpp/rs_sensor.hpp \
+    include/librealsense2/hpp/rs_types.hpp \
+    include/librealsense2/rs.h \
+    include/librealsense2/rs.hpp \
+    include/librealsense2/rs_advanced_mode.h \
+    include/librealsense2/rs_advanced_mode.hpp \
+    include/librealsense2/rsutil.h \
     platform.h \
     realsense.h \
     window_scanner.h
