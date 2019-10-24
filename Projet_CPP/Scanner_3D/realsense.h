@@ -5,8 +5,10 @@
 #include "include/librealsense2/rs.hpp"
 #include <QWidget>
 
-class RealSense
+class RealSense : public QWidget
 {
+    Q_OBJECT
+
 public:
     RealSense();
 
@@ -14,15 +16,20 @@ public:
     void profile_stop(void);
     void set_resolution(unsigned short width, unsigned short height);
     void filter(void);
-    void recovery_platform_data_model(void);
-    void recovery_mobile_data_model(void);
     void set_mode_platfrom(void);
     void set_mode_mobile(void);
     void set_mode_test(void);
 
+    bool getConnect() const;
+
+public slots:
+    void recovery_platform_data_model(void);
+    void recovery_mobile_data_model(void);
+
 private:
-   bool platform = true;
+    bool platform = true;
    bool mobile = false;
+   bool connect = false;
 
    unsigned short m_width = 1280;
    unsigned short m_height = 720;

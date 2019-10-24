@@ -457,9 +457,6 @@ class Window(QWidget):
         dialog = QFileDialog()
         self.filepath = dialog.getExistingDirectory(self, 'Récupération du chemin')
 
-    def stream(self):
-        self.rs.stream_camera()
-
     def click_scan_platform(self):
         if self.connect_rs == True and self.platform.port != 0:
             self.disabled_to_scan()
@@ -543,24 +540,13 @@ class Window(QWidget):
             self.rs.profile_stop()
             self.rs.init_realsense()
             self.timer.start(10)
-        pass
 
     def choose_mode(self, i):
         self.stacked_mode.setCurrentIndex(i)
 
-    def save_file(self):  ##A FINIR
-        self.disable_choice_format()
-        if self.name[0] and self.filepath[0]:
-            if self.pcd.isChecked():
-                self.pcd_checked = True
-            if self.obj.isChecked():
-                self.obj_checked = True
-            if self.ply.isChecked():
-                self.ply_checked = True
-            if self.stl.isChecked():
-                self.stl_checked = True
-            if self.vtk.isChecked():
-                self.vtk_checked = True
+    def save_file(self):
+        name = self.filename.displayText()
+        if name[0] and self.filepath[0]:
             self.create_pcd()
             self.convert_format()
         else:
@@ -570,25 +556,18 @@ class Window(QWidget):
                                     QMessageBox.Ok)
 
     def convert_format(self):
-        if self.obj_checked:
+        if self.obj.isChecked():
             cmd = './pcl_converter ' + self.filename.displayText() + '.pcd ' + self.filename.displayText() + '.obj'
             os.popen(cmd)
-        if self.ply_checked:
+        if self.ply.isChecked():
             cmd = './pcl_converter ' + self.filename.displayText() + '.pcd ' + self.filename.displayText() + '.ply'
             os.popen(cmd)
-        if self.stl_checked:
+        if self.stl.isChecked():
             cmd = './pcl_converter ' + self.filename.displayText() + '.pcd ' + self.filename.displayText() + '.stl'
             os.popen(cmd)
-        if self.vtk_checked:
+        if self.vtk.isChecked():
             cmd = './pcl_converter ' + self.filename.displayText() + '.pcd ' + self.filename.displayText() + '.vtk'
             os.popen(cmd)
-
-    def disable_choice_format(self):
-        self.pcd_checked = False
-        self.obj_checked = False
-        self.ply_checked = False
-        self.stl_checked = False
-        self.vtk_checked = False
 
     def create_pcd(self):
         name = self.filename.displayText()

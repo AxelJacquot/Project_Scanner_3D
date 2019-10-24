@@ -1,14 +1,11 @@
 #include "window_scanner.h"
 
+#include <iostream>
+using namespace std;
+
 Window_Scanner::Window_Scanner(QWidget *parent)
     : QMainWindow(parent)
 {
-    m_list_view->insertItem(0, "LogoQT");
-    m_list_view->insertItem(1, "vue Modèle");
-    m_list_view->insertItem(2, "vue Caméra");
-    m_list_view->setMaximumWidth(150);
-    connect(m_list_view, SIGNAL(currentIndexChanged(int)), this,SLOT(choose_view(int)));
-
     m_list_mode->insertItem(0, "Platform");
     m_list_mode->insertItem(1, "Mobile");
     m_list_mode->insertItem(2, "Configurate Test");
@@ -21,8 +18,8 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     m_list_resolution->setMaximumWidth(150);
     connect(m_list_resolution, SIGNAL(currentIndexChanged(int)), this, SLOT(choose_resolution(int)));
 
-    /*m_filename->setMaxLength(10);
-    m_filename->setMaximumWidth(150);*/
+    m_filename->setMaxLength(10);
+    m_filename->setMaximumWidth(150);
 
     m_button_Close->setMaximumWidth(150);
     //connect(m_button_Close, SIGNAL(clicked()), this, close());
@@ -160,7 +157,6 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     m_layout_box->addWidget(m_ply);
     m_layout_box->addWidget(m_vtk);
 
-    m_layout_choice->addRow("Choice visu", m_list_view);
     m_layout_choice->addRow("Choice resolution", m_list_resolution);
     m_layout_choice->addRow("Choice 3D Format", m_layout_box);
     m_layout_choice->addRow("File Name", m_filename);
@@ -182,7 +178,6 @@ Window_Scanner::Window_Scanner(QWidget *parent)
     widget->setLayout(m_main_layout);
 
     setCentralWidget(widget);
-    printf("ici");
 }
 
 Window_Scanner::~Window_Scanner()
@@ -247,42 +242,119 @@ void Window_Scanner::layout_mode_test()
 
 void Window_Scanner::init_rs()
 {
-    m_rs->init_realsense();
+    QMessageBox *message = new QMessageBox();
+    try {
+        m_rs->init_realsense();
+        message->information(this, "Caméra Connectée",
+                             "La caméra est maintenant connectée et prête à l'utilisation",
+                             message->Ok, message->Ok);
+    } catch (...) {
+        message->information(this, "Caméra non Connectée",
+                             "Veuillez vérifier si la caméra est bien connectée",
+                             message->Ok, message->Ok);
+    }
+    delete message;
 }
 
 void Window_Scanner::recover_path()
 {
-
+    QFileDialog *dialog = new QFileDialog();
+    m_filepath = dialog->getExistingDirectory(this,"Récupération du chemin");
 }
 
-void Window_Scanner::stream()
-{
-
-}
+/*QMessageBox *message = new QMessageBox();
+message->information(m_parent, "",
+                     m_filepath,
+                     message->Ok, message->Ok);
+delete message;*/
 
 void Window_Scanner::click_scan_platform()
 {
-    m_rs->recovery_platform_data_model();
+    if(m_rs->getConnect() == true){
+        disable_to_scan();
+        m_out = 10;
+        //m_rs->set_mode_platfrom();
+        if(m_timer->isActive()){
+            m_timer->stop();
+            m_timer->disconnect();
+        }
+
+        m_timer->connect(m_timer, SIGNAL(timeout()),
+                         m_rs, SLOT(recovery_platform_data_model()));
+        time = 1000;
+        m_timer->start(time);
+    }
+    else{
+        QMessageBox *message = new QMessageBox();
+        message->information(this, "Erreur",
+                             "Veuillez connecter la caméra",
+                             message->Ok, message->Ok);
+        delete message;
+    }
+
 }
 
 void Window_Scanner::click_scan_mobile()
 {
+    if(m_rs->getConnect() == true){
+        disable_to_scan();
+        m_out = 10;
+        //m_rs->set_mode_platfrom();
+        if(m_timer->isActive()){
+            m_timer->stop();
+            m_timer->disconnect();
+        }
 
+        m_timer->connect(m_timer, SIGNAL(timeout()),
+                         m_rs, SLOT(recovery_mobile_data_model()));
+        time = 10;
+        m_timer->start(time);
+    }
+    else{
+        QMessageBox *message = new QMessageBox();
+        message->information(this, "Erreur",
+                             "Veuillez connecter la caméra",
+                             message->Ok, message->Ok);
+        delete message;
+    }
 }
 
 void Window_Scanner::click_scan_test()
 {
+    if(m_rs->getConnect() == true){
+        disable_to_scan();
+        m_out = 10;
+        //m_rs->set_mode_platfrom();
+        if(m_timer->isActive()){
+            m_timer->stop();
+            m_timer->disconnect();
+        }
 
+        m_timer->connect(m_timer, SIGNAL(timeout()), m_rs, SLOT(recovery_platform_data_model()));
+        time = 10;
+        m_timer->start(time);
+    }
+    else{
+        QMessageBox *message = new QMessageBox();
+        message->information(this, "Erreur",
+                             "Veuillez connecter la caméra",
+                             message->Ok, message->Ok);
+        delete message;
+    }
 }
 
 void Window_Scanner::click_stop_scan()
 {
-
+    m_timer->stop();
+    m_timer->disconnect();
 }
 
 void Window_Scanner::scan_platform()
-{
-
+{   //A finir
+    if(m_out != 0){
+        m_out = 0;
+        m_rs->recovery_platform_data_model();
+    }
 }
 
 void Window_Scanner::scan()
@@ -290,19 +362,34 @@ void Window_Scanner::scan()
 
 }
 
-void Window_Scanner::closeEvent(QCloseEvent event)
+void Window_Scanner::closeEvent(QCloseEvent *event)
 {
-
-}
-
-void Window_Scanner::choose_view(int i)
-{
-
+    QMessageBox *message = new QMessageBox();
+    int reply = message->question(this, "Erreur",
+                         "Veuillez connecter la caméra",
+                         message->Close, message->Cancel);
+    delete message;
+    if(reply == QMessageBox::Close)
+        event->accept();
+    else
+        event->ignore();
 }
 
 void Window_Scanner::choose_resolution(int i)
 {
+    if(i == 0)
+        m_rs->set_resolution(1280, 720);
+    else if(i == 1)
+        m_rs->set_resolution(848, 480);
+    else
+        m_rs->set_resolution(640, 360);
 
+    if(m_rs->getConnect()){
+        m_timer->stop();
+        m_rs->profile_stop();
+        m_rs->init_realsense();
+        m_timer->start(time);
+    }
 }
 
 void Window_Scanner::choose_mode(int i)
@@ -312,7 +399,16 @@ void Window_Scanner::choose_mode(int i)
 
 void Window_Scanner::save_file()
 {
-
+    QString name = m_filename->displayText();
+    if(name[0] != "" && m_filepath[0] != ""){
+    }
+    else{
+        QMessageBox *message = new QMessageBox();
+        message->information(this, "Attention problème lors de la sauvegarde",
+                             "Veuillez donner un nom aux fichiers ainsi que le chemin pour la sauvegarde",
+                             message->Ok, message->Ok);
+        delete message;
+    }
 }
 
 void Window_Scanner::init_platform()
@@ -322,5 +418,6 @@ void Window_Scanner::init_platform()
 
 void Window_Scanner::disable_to_scan()
 {
-
+    m_list_mode->setDisabled(true);
+    m_list_resolution->setDisabled(true);
 }

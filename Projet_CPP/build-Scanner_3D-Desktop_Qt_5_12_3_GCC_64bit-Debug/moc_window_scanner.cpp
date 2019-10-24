@@ -21,8 +21,8 @@ QT_BEGIN_MOC_NAMESPACE
 QT_WARNING_PUSH
 QT_WARNING_DISABLE_DEPRECATED
 struct qt_meta_stringdata_Window_Scanner_t {
-    QByteArrayData data[21];
-    char stringdata0[246];
+    QByteArrayData data[19];
+    char stringdata0[228];
 };
 #define QT_MOC_LITERAL(idx, ofs, len) \
     Q_STATIC_BYTE_ARRAY_DATA_HEADER_INITIALIZER_WITH_OFFSET(len, \
@@ -35,31 +35,29 @@ QT_MOC_LITERAL(0, 0, 14), // "Window_Scanner"
 QT_MOC_LITERAL(1, 15, 7), // "init_rs"
 QT_MOC_LITERAL(2, 23, 0), // ""
 QT_MOC_LITERAL(3, 24, 12), // "recover_path"
-QT_MOC_LITERAL(4, 37, 6), // "stream"
-QT_MOC_LITERAL(5, 44, 19), // "click_scan_platform"
-QT_MOC_LITERAL(6, 64, 17), // "click_scan_mobile"
-QT_MOC_LITERAL(7, 82, 15), // "click_scan_test"
-QT_MOC_LITERAL(8, 98, 15), // "click_stop_scan"
-QT_MOC_LITERAL(9, 114, 13), // "scan_platform"
-QT_MOC_LITERAL(10, 128, 4), // "scan"
-QT_MOC_LITERAL(11, 133, 10), // "closeEvent"
-QT_MOC_LITERAL(12, 144, 11), // "QCloseEvent"
-QT_MOC_LITERAL(13, 156, 5), // "event"
-QT_MOC_LITERAL(14, 162, 11), // "choose_view"
-QT_MOC_LITERAL(15, 174, 1), // "i"
-QT_MOC_LITERAL(16, 176, 17), // "choose_resolution"
-QT_MOC_LITERAL(17, 194, 11), // "choose_mode"
-QT_MOC_LITERAL(18, 206, 9), // "save_file"
-QT_MOC_LITERAL(19, 216, 13), // "init_platform"
-QT_MOC_LITERAL(20, 230, 15) // "disable_to_scan"
+QT_MOC_LITERAL(4, 37, 19), // "click_scan_platform"
+QT_MOC_LITERAL(5, 57, 17), // "click_scan_mobile"
+QT_MOC_LITERAL(6, 75, 15), // "click_scan_test"
+QT_MOC_LITERAL(7, 91, 15), // "click_stop_scan"
+QT_MOC_LITERAL(8, 107, 13), // "scan_platform"
+QT_MOC_LITERAL(9, 121, 4), // "scan"
+QT_MOC_LITERAL(10, 126, 10), // "closeEvent"
+QT_MOC_LITERAL(11, 137, 12), // "QCloseEvent*"
+QT_MOC_LITERAL(12, 150, 5), // "event"
+QT_MOC_LITERAL(13, 156, 17), // "choose_resolution"
+QT_MOC_LITERAL(14, 174, 1), // "i"
+QT_MOC_LITERAL(15, 176, 11), // "choose_mode"
+QT_MOC_LITERAL(16, 188, 9), // "save_file"
+QT_MOC_LITERAL(17, 198, 13), // "init_platform"
+QT_MOC_LITERAL(18, 212, 15) // "disable_to_scan"
 
     },
     "Window_Scanner\0init_rs\0\0recover_path\0"
-    "stream\0click_scan_platform\0click_scan_mobile\0"
+    "click_scan_platform\0click_scan_mobile\0"
     "click_scan_test\0click_stop_scan\0"
-    "scan_platform\0scan\0closeEvent\0QCloseEvent\0"
-    "event\0choose_view\0i\0choose_resolution\0"
-    "choose_mode\0save_file\0init_platform\0"
+    "scan_platform\0scan\0closeEvent\0"
+    "QCloseEvent*\0event\0choose_resolution\0"
+    "i\0choose_mode\0save_file\0init_platform\0"
     "disable_to_scan"
 };
 #undef QT_MOC_LITERAL
@@ -70,7 +68,7 @@ static const uint qt_meta_data_Window_Scanner[] = {
        8,       // revision
        0,       // classname
        0,    0, // classinfo
-      16,   14, // methods
+      14,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -78,22 +76,20 @@ static const uint qt_meta_data_Window_Scanner[] = {
        0,       // signalCount
 
  // slots: name, argc, parameters, tag, flags
-       1,    0,   94,    2, 0x0a /* Public */,
-       3,    0,   95,    2, 0x0a /* Public */,
-       4,    0,   96,    2, 0x0a /* Public */,
-       5,    0,   97,    2, 0x0a /* Public */,
-       6,    0,   98,    2, 0x0a /* Public */,
-       7,    0,   99,    2, 0x0a /* Public */,
-       8,    0,  100,    2, 0x0a /* Public */,
-       9,    0,  101,    2, 0x0a /* Public */,
-      10,    0,  102,    2, 0x0a /* Public */,
-      11,    1,  103,    2, 0x0a /* Public */,
-      14,    1,  106,    2, 0x0a /* Public */,
-      16,    1,  109,    2, 0x0a /* Public */,
-      17,    1,  112,    2, 0x0a /* Public */,
-      18,    0,  115,    2, 0x0a /* Public */,
-      19,    0,  116,    2, 0x0a /* Public */,
-      20,    0,  117,    2, 0x0a /* Public */,
+       1,    0,   84,    2, 0x0a /* Public */,
+       3,    0,   85,    2, 0x0a /* Public */,
+       4,    0,   86,    2, 0x0a /* Public */,
+       5,    0,   87,    2, 0x0a /* Public */,
+       6,    0,   88,    2, 0x0a /* Public */,
+       7,    0,   89,    2, 0x0a /* Public */,
+       8,    0,   90,    2, 0x0a /* Public */,
+       9,    0,   91,    2, 0x0a /* Public */,
+      10,    1,   92,    2, 0x0a /* Public */,
+      13,    1,   95,    2, 0x0a /* Public */,
+      15,    1,   98,    2, 0x0a /* Public */,
+      16,    0,  101,    2, 0x0a /* Public */,
+      17,    0,  102,    2, 0x0a /* Public */,
+      18,    0,  103,    2, 0x0a /* Public */,
 
  // slots: parameters
     QMetaType::Void,
@@ -104,11 +100,9 @@ static const uint qt_meta_data_Window_Scanner[] = {
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
-    QMetaType::Void,
-    QMetaType::Void, 0x80000000 | 12,   13,
-    QMetaType::Void, QMetaType::Int,   15,
-    QMetaType::Void, QMetaType::Int,   15,
-    QMetaType::Void, QMetaType::Int,   15,
+    QMetaType::Void, 0x80000000 | 11,   12,
+    QMetaType::Void, QMetaType::Int,   14,
+    QMetaType::Void, QMetaType::Int,   14,
     QMetaType::Void,
     QMetaType::Void,
     QMetaType::Void,
@@ -124,20 +118,18 @@ void Window_Scanner::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _
         switch (_id) {
         case 0: _t->init_rs(); break;
         case 1: _t->recover_path(); break;
-        case 2: _t->stream(); break;
-        case 3: _t->click_scan_platform(); break;
-        case 4: _t->click_scan_mobile(); break;
-        case 5: _t->click_scan_test(); break;
-        case 6: _t->click_stop_scan(); break;
-        case 7: _t->scan_platform(); break;
-        case 8: _t->scan(); break;
-        case 9: _t->closeEvent((*reinterpret_cast< QCloseEvent(*)>(_a[1]))); break;
-        case 10: _t->choose_view((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 11: _t->choose_resolution((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 12: _t->choose_mode((*reinterpret_cast< int(*)>(_a[1]))); break;
-        case 13: _t->save_file(); break;
-        case 14: _t->init_platform(); break;
-        case 15: _t->disable_to_scan(); break;
+        case 2: _t->click_scan_platform(); break;
+        case 3: _t->click_scan_mobile(); break;
+        case 4: _t->click_scan_test(); break;
+        case 5: _t->click_stop_scan(); break;
+        case 6: _t->scan_platform(); break;
+        case 7: _t->scan(); break;
+        case 8: _t->closeEvent((*reinterpret_cast< QCloseEvent*(*)>(_a[1]))); break;
+        case 9: _t->choose_resolution((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 10: _t->choose_mode((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 11: _t->save_file(); break;
+        case 12: _t->init_platform(); break;
+        case 13: _t->disable_to_scan(); break;
         default: ;
         }
     }
@@ -172,13 +164,13 @@ int Window_Scanner::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 16)
+        if (_id < 14)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 16;
+        _id -= 14;
     } else if (_c == QMetaObject::RegisterMethodArgumentMetaType) {
-        if (_id < 16)
+        if (_id < 14)
             *reinterpret_cast<int*>(_a[0]) = -1;
-        _id -= 16;
+        _id -= 14;
     }
     return _id;
 }
