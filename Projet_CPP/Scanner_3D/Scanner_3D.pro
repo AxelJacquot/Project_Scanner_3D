@@ -65,4 +65,5 @@ INCLUDEPATH += ./include/librealsense2 \
                ./include/librealsense2/hpp \
                ./include/librealsense2/h \
 
-LIBS += /usr/local/lib/librealsense2.so #pc
+LIBS += /usr/lib/x86_64-linux-gnu/librealsense2.so
+ #pc
